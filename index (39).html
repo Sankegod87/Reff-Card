@@ -1,0 +1,2184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Card Reports — Match Official Assistant</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f766e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Card Reports">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css">
+<style>
+  :root {
+    --amber: #b45309; --amber-bg: #fef3c7; --amber-line: #fde3a7;
+    --red: #b91c1c; --red-bg: #fee2e2; --red-line: #f8c9c9;
+    --blue: #1d4ed8; --blue-bg: #dbeafe; --blue-line: #bfdbfe;
+    --accent: #0f766e; --accent-dark: #0c5f59; --accent-bg: #e7f5f3;
+    --ink: #16181a; --muted: #6b7076; --faint: #9aa0a6; --line: #e4e6e8;
+    --paper: #f6f7f5; --card: #ffffff;
+    --shadow-sm: 0 1px 2px rgba(20,20,20,0.04), 0 1px 1px rgba(20,20,20,0.03);
+    --shadow-md: 0 4px 14px rgba(20,20,20,0.07), 0 1px 3px rgba(20,20,20,0.05);
+    --radius: 14px; --radius-sm: 10px;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--paper); color: var(--ink); margin: 0;
+    line-height: 1.5; -webkit-font-smoothing: antialiased;
+  }
+  .app { max-width: 640px; margin-inline: auto; padding: 16px 16px 40px; }
+  .topbar {
+    position: sticky; top: 0; z-index: 20; background: rgba(246,247,245,0.88);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar-inner {
+    max-width: 640px; margin-inline: auto; padding: 12px 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .topbar-brand { display: flex; align-items: center; gap: 9px; cursor: pointer; }
+  .topbar-brand .mark {
+    width: 30px; height: 30px; border-radius: 9px; background: var(--accent);
+    color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px;
+    box-shadow: var(--shadow-sm);
+  }
+  .topbar-brand span.name { font-weight: 700; font-size: 15px; letter-spacing: -0.01em; }
+  h1 { font-size: 20px; font-weight: 700; margin: 4px 0 4px; letter-spacing: -0.01em; }
+  h2 {
+    font-size: 12px; font-weight: 700; margin: 0 0 12px; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--muted); display: flex; align-items: center; gap: 6px;
+  }
+  h2 i { color: var(--accent); font-size: 14px; }
+  .sub { font-size: 13.5px; color: var(--muted); margin: 0 0 18px; }
+  .screen { display: none; }
+  .screen.active { display: block; animation: fadeUp 0.22s ease; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow-sm);
+  }
+  label { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin: 12px 0 5px; }
+  label:first-child { margin-top: 0; }
+  input, select, textarea {
+    width: 100%; padding: 10px 12px; font-size: 14.5px; border: 1.5px solid var(--line);
+    border-radius: var(--radius-sm); background: #fff; color: var(--ink); font-family: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg);
+  }
+  input::placeholder, textarea::placeholder { color: var(--faint); }
+  textarea { resize: vertical; min-height: 48px; }
+  select { appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7076' stroke-width='2.5'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat; background-position: right 10px center; padding-right: 32px;
+  }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 11px 16px; border-radius: var(--radius-sm); border: 1.5px solid var(--line); background: #fff;
+    font-size: 14px; font-weight: 600; cursor: pointer; color: var(--ink);
+    font-family: inherit; transition: transform 0.08s, background 0.15s, box-shadow 0.15s;
+  }
+  .btn i { font-size: 16px; }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary {
+    background: var(--accent); color: #fff; border-color: var(--accent);
+    width: 100%; margin-top: 14px; box-shadow: 0 2px 8px rgba(15,118,110,0.28);
+  }
+  .btn-primary:active { background: var(--accent-dark); }
+  .btn-block { width: 100%; margin-top: 10px; }
+  .type-btn {
+    display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--line); background: #fff; width: 100%; margin-bottom: 9px; cursor: pointer;
+    font-size: 14.5px; font-weight: 600; text-align: left; font-family: inherit; color: var(--ink);
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .type-btn .icon-chip {
+    width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; font-size: 17px; color: #fff;
+  }
+  .type-btn .type-copy { display: flex; flex-direction: column; gap: 1px; }
+  .type-btn .type-copy .sub3 { font-size: 11.5px; font-weight: 400; color: var(--muted); }
+  .type-btn.yellow { border-color: var(--amber-line); background: var(--amber-bg); }
+  .type-btn.yellow .icon-chip { background: var(--amber); }
+  .type-btn.red { border-color: var(--red-line); background: var(--red-bg); }
+  .type-btn.red .icon-chip { background: var(--red); }
+  .type-btn.blue { border-color: var(--blue-line); background: var(--blue-bg); }
+  .type-btn.blue .icon-chip { background: var(--blue); }
+  .type-btn.disabled { opacity: 0.45; cursor: not-allowed; }
+  .type-btn.disabled .note { font-size: 11px; color: var(--muted); font-weight: 500; margin-left: auto; background: #fff; padding: 3px 8px; border-radius: 20px; }
+  .card-row {
+    display: flex; align-items: center; gap: 12px; padding: 12px 2px; border-top: 1px solid var(--line);
+    cursor: pointer; margin: 0 -2px; border-radius: 8px; transition: background 0.15s;
+  }
+  .card-row:first-child { border-top: none; }
+  .card-row:active { background: var(--paper); }
+  .tag {
+    width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0; display: flex;
+    align-items: center; justify-content: center; color: #fff; font-size: 15px;
+  }
+  .tag.yellow { background: var(--amber); } .tag.red { background: var(--red); } .tag.blue { background: var(--blue); }
+  .card-row .meta { flex: 1; min-width: 0; }
+  .card-row .meta .name { font-size: 14.5px; font-weight: 600; margin: 0; }
+  .card-row .meta .sub2 { font-size: 12px; color: var(--muted); margin: 1px 0 0; }
+  .card-row > i.ti-chevron-right { color: var(--faint); font-size: 16px; }
+  .backlink {
+    font-size: 13.5px; font-weight: 600; color: var(--muted); text-decoration: none;
+    display: inline-flex; align-items: center; gap: 4px; margin-bottom: 14px; cursor: pointer;
+  }
+  .backlink i { font-size: 15px; }
+  .backlink:active { color: var(--ink); }
+  .empty { font-size: 13.5px; color: var(--faint); padding: 26px 0; text-align: center; }
+  pre.output {
+    white-space: pre-wrap; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px;
+    background: #fbfbfa; border-radius: var(--radius-sm); padding: 14px; margin: 0 0 14px; line-height: 1.6;
+    border: 1px solid var(--line); color: #333;
+  }
+  .fieldnote { font-size: 11.5px; color: var(--faint); margin: -2px 0 2px; }
+  .conditional { display: none; }
+  .conditional.show { display: block; }
+  .role-btn {
+    display: flex; align-items: flex-start; gap: 12px; width: 100%; text-align: left; padding: 15px;
+    border-radius: var(--radius-sm); border: 1.5px solid var(--line); background: #fff; margin-bottom: 9px;
+    cursor: pointer; font-family: inherit; transition: border-color 0.15s;
+  }
+  .role-btn:active { border-color: var(--accent); }
+  .role-btn i { font-size: 19px; color: var(--accent); margin-top: 1px; flex-shrink: 0; }
+  .role-btn .name { font-size: 14.5px; font-weight: 700; margin: 0 0 2px; }
+  .role-btn .desc { font-size: 12.5px; color: var(--muted); margin: 0; line-height: 1.4; }
+  .checklist { max-height: 260px; overflow-y: auto; border: 1.5px solid var(--line); border-radius: var(--radius-sm); padding: 2px 12px; background: #fff; }
+  .check-row { display: flex; align-items: flex-start; gap: 9px; padding: 10px 0; border-top: 1px solid var(--line); }
+  .check-row:first-child { border-top: none; }
+  .check-row input { width: auto; margin-top: 3px; accent-color: var(--accent); }
+  .check-row .clabel { font-size: 13.5px; }
+  .check-row .clabel .code { font-weight: 700; color: var(--ink); }
+  .check-row .clabel .ctext { display: block; color: var(--muted); font-size: 11.5px; margin-top: 1px; }
+  .referee-only, .ar-only { display: none; }
+  .role-referee .referee-only { display: block; }
+  .role-ar .ar-only { display: block; }
+  .warn-banner {
+    display: flex; align-items: flex-start; gap: 8px; background: var(--red-bg); color: var(--red);
+    border: 1px solid var(--red-line); border-radius: var(--radius-sm); padding: 11px 13px;
+    font-size: 12.5px; font-weight: 500; margin: -2px 0 10px; line-height: 1.4;
+  }
+  .warn-banner i { font-size: 16px; margin-top: 1px; flex-shrink: 0; }
+  .btn-danger { color: var(--red); border-color: var(--red-line); background: var(--red-bg); }
+  .btn-ghost { background: transparent; }
+  input[type="file"] { display: none; }
+  input.invalid, select.invalid, textarea.invalid {
+    border-color: var(--red) !important; box-shadow: 0 0 0 3px var(--red-bg) !important;
+  }
+  .field-error { font-size: 11.5px; color: var(--red); margin: -3px 0 2px; display: none; }
+  .field-error.show { display: block; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-brand" onclick="showScreen('home')">
+      <span class="mark"><i class="ti ti-shield-check"></i></span>
+      <span class="name">Card Reports</span>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+
+<div id="screen-home" class="screen active">
+  <h1>Card Reports</h1>
+  <p class="sub">Post-match yellow, red and blue card logging.</p>
+
+  <div class="card">
+    <h2>Settings (used on every report)</h2>
+    <label>Official name</label>
+    <input id="set-official" placeholder="Last, First">
+    <div class="row2">
+      <div><label>Phone</label><input id="set-phone" placeholder="555 555 5555"></div>
+      <div><label>Provincial union</label><input id="set-union" placeholder="Alberta"></div>
+    </div>
+    <button class="btn btn-block" onclick="saveSettings()"><i class="ti ti-device-floppy"></i>Save settings</button>
+  </div>
+
+  <div class="card">
+    <h2>Current match</h2>
+    <div id="no-match" class="empty">No match set up yet.</div>
+    <div id="match-summary"></div>
+    <button class="btn btn-block" onclick="startNewMatch()"><i class="ti ti-plus"></i>New match</button>
+  </div>
+
+  <div class="card">
+    <h2>Season log</h2>
+    <p class="sub" style="margin-bottom:10px;">Every match — past or upcoming — stays saved. Switching matches never clears anything.</p>
+    <button class="btn btn-block" onclick="showScreen('match-history')"><i class="ti ti-history"></i>View all matches</button>
+    <div class="row2" style="margin-top:10px;">
+      <button class="btn" onclick="exportBackup()"><i class="ti ti-download"></i>Export backup</button>
+      <button class="btn" onclick="document.getElementById('import-file').click()"><i class="ti ti-upload"></i>Import backup</button>
+    </div>
+    <input type="file" id="import-file" accept="application/json" onchange="importBackup(event)">
+    <p class="fieldnote" style="margin-top:8px;">Everything lives in this browser only — export a backup before switching phones or clearing browser data.</p>
+  </div>
+
+  <div class="card" id="match-cards-card" style="display:none;">
+    <h2>Cards this match</h2>
+    <div id="card-list"></div>
+    <button class="btn btn-primary" onclick="startAddCard()"><i class="ti ti-plus"></i>Log new card</button>
+  </div>
+</div>
+
+<div id="screen-match-setup" class="screen">
+  <a class="backlink" onclick="cancelMatchSetup()"><i class="ti ti-chevron-left"></i>Back</a>
+  <h1 id="match-setup-title">Match setup</h1>
+  <p class="sub" id="match-setup-sub">Today or past dates become your current match right away. Future dates get saved as upcoming — set them current when matchday arrives.</p>
+  <div class="card">
+    <div class="row2">
+      <div><label>Date</label><input id="m-date" type="date"></div>
+      <div><label>Kickoff time</label><input id="m-time" type="time"></div>
+    </div>
+    <label>Team A (your player pool for this side)</label>
+    <input id="m-teamA" placeholder="VHT U15 Boys">
+    <label>Team B</label>
+    <input id="m-teamB" placeholder="CCIAC/Hornets U15 Boys">
+    <label>Competition</label>
+    <input id="m-competition" placeholder="Calgary Rugby U15 Boys 2026">
+    <label>Venue</label>
+    <input id="m-venue" placeholder="">
+    <button class="btn btn-primary" onclick="saveMatch()" id="match-setup-save-btn"><i class="ti ti-device-floppy"></i>Save match</button>
+  </div>
+</div>
+
+<div id="screen-add-type" class="screen">
+  <a class="backlink" onclick="showScreen('home')"><i class="ti ti-chevron-left"></i>Back</a>
+  <h1>Log a card</h1>
+  <div class="card">
+    <h2>Card type</h2>
+    <button class="type-btn yellow" onclick="chooseType('yellow')">
+      <span class="icon-chip"><i class="ti ti-flag-filled"></i></span>
+      <span class="type-copy">Yellow — caution<span class="sub3">Sin bin — duration set by league</span></span>
+    </button>
+    <button class="type-btn red" onclick="chooseType('red')">
+      <span class="icon-chip"><i class="ti ti-square-rounded-x-filled"></i></span>
+      <span class="type-copy">Red — send off<span class="sub3">Referee or assistant referee report</span></span>
+    </button>
+    <button class="type-btn blue" onclick="chooseType('blue')">
+      <span class="icon-chip"><i class="ti ti-first-aid-kit"></i></span>
+      <span class="type-copy">Blue — concussion<span class="sub3">Recognize and remove</span></span>
+    </button>
+  </div>
+</div>
+
+<div id="screen-yellow-form" class="screen">
+  <a class="backlink" onclick="cancelForm()"><i class="ti ti-chevron-left"></i>Cancel</a>
+  <h1 id="yellow-form-title">Yellow card report</h1>
+  <div class="card">
+    <h2>Player</h2>
+    <div class="row2">
+      <div><label>Player name</label><input id="y-name" placeholder="First Last"></div>
+      <div><label>Jersey #</label><input id="y-number"></div>
+    </div>
+    <label>Player's team</label>
+    <select id="y-team"></select>
+    <label>Player provincial union</label>
+    <input id="y-player-union" placeholder="Alberta">
+  </div>
+
+  <div class="card">
+    <h2>Incident details</h2>
+    <div class="row2">
+      <div><label>Period</label><select id="y-period"><option>1</option><option selected>2</option></select></div>
+      <div><label>Elapsed time in period</label><input id="y-elapsed" placeholder="57:30"></div>
+    </div>
+    <div class="row2">
+      <div><label>Score — player's team first</label><input id="y-score-for" type="number" placeholder="50"></div>
+      <div><label>&nbsp;</label><input id="y-score-against" type="number" placeholder="19"></div>
+    </div>
+    <label>Law</label>
+    <select id="y-law"></select>
+    <div class="conditional" id="y-law-other-wrap"><label>Other — details</label><input id="y-law-other"></div>
+    <label>Proximity (metres)</label>
+    <input id="y-proximity" type="number">
+  </div>
+
+  <div class="card">
+    <h2>Warnings and danger</h2>
+    <div class="row2">
+      <div><label>Warning issued to player?</label><select id="y-warn-player"><option>No</option><option>Yes</option></select></div>
+      <div><label>Warning issued to team?</label><select id="y-warn-team"><option>No</option><option>Yes</option></select></div>
+    </div>
+    <label>Head or neck/throat contact?</label>
+    <select id="y-head-contact"><option>No</option><option>Yes</option></select>
+    <label>Degree of danger</label>
+    <select id="y-danger"><option>Low</option><option selected>Medium</option><option>High</option></select>
+    <label>Reason for mitigation</label>
+    <input id="y-mitigation-reason" placeholder="e.g. sudden drop or change of direction">
+    <label>Mitigation applied to sanction?</label>
+    <select id="y-mitigation-applied"><option>N/A</option><option>Yes</option><option>No</option></select>
+  </div>
+
+  <div class="card">
+    <h2>Narrative</h2>
+    <p class="fieldnote">Builds into one factual, chronological paragraph. Avoid opinion.</p>
+    <label>Location on field</label>
+    <input id="y-n-location" placeholder="attacking third, 50m from touchline">
+    <label>Action leading to the incident</label>
+    <textarea id="y-n-action" placeholder="During a ruck, Jackson Turner made a tackle attempt on the opposition ball carrier..."></textarea>
+    <label>Point of contact / body position</label>
+    <textarea id="y-n-contact" placeholder="Contact with the ball carrier's upper chest with his arm, failing to lower body height..."></textarea>
+    <label>Ball proximity</label>
+    <input id="y-n-ball" placeholder="Ball carrier in possession, slightly bent at the waist">
+    <label>Outcome — injury, reaction, continuation, remorse</label>
+    <textarea id="y-n-outcome" placeholder="Ball carrier fell, no immediate injury. Player accepted decision, showed remorse..."></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Submission</h2>
+    <label>Submission timing</label>
+    <select id="y-timing"><option>Within 24hrs</option><option>24-48hrs</option><option>After 48hrs</option></select>
+    <div class="conditional" id="y-timing-reason-wrap"><label>Reason for submission after 48hrs</label><textarea id="y-timing-reason"></textarea></div>
+    <label>Video available?</label>
+    <select id="y-video"><option>No</option><option>Yes</option></select>
+    <div class="conditional" id="y-video-link-wrap"><label>Video link / access details (include timestamp)</label><input id="y-video-link"></div>
+  </div>
+
+  <button class="btn btn-primary" onclick="generateYellow()"><i class="ti ti-file-check"></i>Generate report</button>
+</div>
+
+<div id="screen-red-role" class="screen">
+  <a class="backlink" onclick="showScreen('add-type')"><i class="ti ti-chevron-left"></i>Back</a>
+  <h1>Red card report</h1>
+  <div class="card">
+    <h2>Filing as</h2>
+    <button class="role-btn" onclick="chooseRedRole('referee')">
+      <i class="ti ti-whistle"></i>
+      <span><p class="name">Referee</p>
+      <p class="desc">The main send-off report — includes prior discipline, player reaction, injury details.</p></span>
+    </button>
+    <button class="role-btn" onclick="chooseRedRole('ar')">
+      <i class="ti ti-flag-3-filled"></i>
+      <span><p class="name">Assistant referee</p>
+      <p class="desc">A corroborating report — links back to the referee's report by name.</p></span>
+    </button>
+  </div>
+</div>
+
+<div id="screen-red-form" class="screen">
+  <a class="backlink" onclick="cancelForm()"><i class="ti ti-chevron-left"></i>Cancel</a>
+  <h1 id="red-form-title">Red card report</h1>
+  <div class="card">
+    <h2>Player</h2>
+    <div class="row2">
+      <div><label>Player name</label><input id="r-name" placeholder="First Last"></div>
+      <div><label>Jersey #</label><input id="r-number"></div>
+    </div>
+    <div class="row2">
+      <div><label>Player's team</label><select id="r-team"></select></div>
+      <div><label>Position</label><input id="r-position" placeholder="e.g. Prop"></div>
+    </div>
+    <label>Player provincial union</label>
+    <input id="r-player-union" placeholder="Alberta">
+  </div>
+
+  <div class="card">
+    <h2>Incident details</h2>
+    <div class="row2">
+      <div><label>Half</label><select id="r-half"><option>1</option><option selected>2</option></select></div>
+      <div><label>Elapsed time in half</label><input id="r-elapsed" placeholder="57:30"></div>
+    </div>
+    <div class="row2">
+      <div><label>Score at incident — player's team first</label><input id="r-score-for" type="number" placeholder="50"></div>
+      <div><label>&nbsp;</label><input id="r-score-against" type="number" placeholder="19"></div>
+    </div>
+    <div class="row2">
+      <div><label>Final score — player's team first</label><input id="r-final-for" type="number"></div>
+      <div><label>&nbsp;</label><input id="r-final-against" type="number"></div>
+    </div>
+    <div class="row2">
+      <div><label>Referee's proximity to incident (m)</label><input id="r-proximity" type="number"></div>
+      <div><label>Position of ball relative to incident</label><input id="r-ball-position" placeholder="e.g. in play, 5m away"></div>
+    </div>
+    <label>Were other players carded (sin-binned/sent off) in relation to this incident?</label>
+    <select id="r-other-carded"><option>No</option><option>Yes</option></select>
+    <div class="conditional" id="r-other-carded-wrap"><label>Details</label><textarea id="r-other-carded-detail"></textarea></div>
+  </div>
+
+  <div class="card referee-only">
+    <h2>Prior discipline (referee only)</h2>
+    <label>Previous caution issued this match?</label>
+    <select id="r-prior-caution"><option>No</option><option>Yes</option></select>
+    <div class="conditional" id="r-prior-caution-wrap"><label>Individual or team caution?</label><select id="r-prior-caution-type"><option>Individual</option><option>Team</option></select></div>
+    <div class="row2">
+      <div><label>Warned earlier?</label><select id="r-warned-earlier"><option>No</option><option>Yes</option></select></div>
+      <div><label>Sin-binned earlier?</label><select id="r-sinbinned-earlier"><option>No</option><option>Yes</option></select></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Law infringed</h2>
+    <p class="fieldnote">Select all that apply.</p>
+    <div class="checklist" id="r-law-checklist"></div>
+    <div class="conditional" id="r-law-other-wrap"><label>Other — details</label><input id="r-law-other"></div>
+  </div>
+
+  <div class="card">
+    <h2>Context</h2>
+    <label>Anything observed that may have provoked the incident?</label>
+    <textarea id="r-provocation"></textarea>
+    <div class="referee-only">
+      <label>Player's reaction to the sending off</label>
+      <textarea id="r-reaction"></textarea>
+      <label>Injury details</label>
+      <textarea id="r-injury"></textarea>
+      <label>Was the sending off based on an AR's report?</label>
+      <select id="r-based-on-ar"><option>No</option><option>Yes</option></select>
+      <div class="conditional" id="r-ar-name-wrap"><label>AR's name</label><input id="r-ar-name"></div>
+    </div>
+    <div class="ar-only">
+      <label>Name of referee also submitting a report</label>
+      <input id="r-referee-name">
+      <label>Link to that referee's stored report (optional)</label>
+      <select id="r-link-referee"><option value="">— not linked —</option></select>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Narrative</h2>
+    <p class="fieldnote">Builds into one factual, chronological paragraph. Avoid opinion.</p>
+    <label>Location on field</label>
+    <input id="r-n-location" placeholder="e.g. midfield, 15m from touchline">
+    <label>Action leading to the incident</label>
+    <textarea id="r-n-action"></textarea>
+    <label>Point of contact / body position</label>
+    <textarea id="r-n-contact"></textarea>
+    <label>Outcome — injury, reaction, continuation</label>
+    <textarea id="r-n-outcome"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Submission</h2>
+    <label>Submission timing</label>
+    <select id="r-timing"><option>Within 24hrs</option><option>24-48hrs</option><option>After 48hrs</option></select>
+    <div class="conditional" id="r-timing-reason-wrap"><label>Reason for submission after 48hrs</label><textarea id="r-timing-reason"></textarea></div>
+    <label>Video available?</label>
+    <select id="r-video"><option>No</option><option>Yes</option></select>
+    <div class="conditional" id="r-video-link-wrap"><label>Video link / access details (include timestamp)</label><input id="r-video-link"></div>
+  </div>
+
+  <div class="card">
+    <h2>Submitted by</h2>
+    <div class="row2">
+      <div><label>Name</label><input id="r-sub-name"></div>
+      <div><label>Signature (typed)</label><input id="r-sub-signature"></div>
+    </div>
+    <div class="row2">
+      <div><label>Contact</label><input id="r-sub-contact"></div>
+      <div><label>Date</label><input id="r-sub-date" type="date"></div>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" onclick="generateRed()"><i class="ti ti-file-check"></i>Generate report</button>
+</div>
+
+<div id="screen-blue-form" class="screen">
+  <a class="backlink" onclick="cancelForm()"><i class="ti ti-chevron-left"></i>Cancel</a>
+  <h1 id="blue-form-title">Blue card — concussion recognition</h1>
+  <div class="card">
+    <h2>Player</h2>
+    <div class="row2">
+      <div><label>Player name</label><input id="b-name" placeholder="First Last"></div>
+      <div><label>Jersey #</label><input id="b-number"></div>
+    </div>
+    <label>Player's team</label>
+    <select id="b-team"></select>
+    <label>Player provincial union</label>
+    <input id="b-player-union" placeholder="Alberta">
+  </div>
+
+  <div class="card">
+    <h2>Incident details</h2>
+    <div class="row2">
+      <div><label>Period</label><select id="b-period"><option>1</option><option selected>2</option></select></div>
+      <div><label>Elapsed time in period</label><input id="b-elapsed" placeholder="57:30"></div>
+    </div>
+    <div class="row2">
+      <div><label>Score — player's team first</label><input id="b-score-for" type="number"></div>
+      <div><label>&nbsp;</label><input id="b-score-against" type="number"></div>
+    </div>
+    <label>Who initiated the blue card?</label>
+    <select id="b-initiator"><option>Referee</option><option>Coach</option><option>Player</option><option>Medical staff</option><option>Other</option></select>
+    <div class="conditional" id="b-initiator-other-wrap"><label>Other — details</label><input id="b-initiator-other"></div>
+  </div>
+
+  <div class="card">
+    <h2>Signs and symptoms observed</h2>
+    <p class="fieldnote">Select all that apply.</p>
+    <div class="checklist" id="b-symptom-checklist"></div>
+    <div class="conditional" id="b-symptom-other-wrap"><label>Other — details</label><input id="b-symptom-other"></div>
+  </div>
+
+  <div class="card">
+    <h2>Narrative</h2>
+    <p class="fieldnote">Builds into one factual, chronological paragraph. Avoid opinion.</p>
+    <label>Location on field</label>
+    <input id="b-n-location" placeholder="e.g. open play, midfield">
+    <label>Action leading up to the incident</label>
+    <textarea id="b-n-action"></textarea>
+    <label>Mechanism of injury / point of contact</label>
+    <textarea id="b-n-contact"></textarea>
+    <label>Immediate reaction</label>
+    <textarea id="b-n-outcome"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Removal and return to play</h2>
+    <label>Was the player removed from the field immediately?</label>
+    <select id="b-removed"><option>Yes</option><option>No</option></select>
+    <label>Did the player return to play in this match?</label>
+    <select id="b-returned"><option>No</option><option>Yes</option></select>
+    <div class="conditional" id="b-returned-warn"><p class="warn-banner"><i class="ti ti-alert-triangle-filled"></i>Flagged — a player should not return to play in the same match under the recognize-and-remove protocol. Double-check this before submitting.</p></div>
+  </div>
+
+  <div class="card">
+    <h2>Submission</h2>
+    <label>Submission timing</label>
+    <select id="b-timing"><option>Within 24hrs</option><option>24-48hrs</option><option>After 48hrs</option></select>
+    <div class="conditional" id="b-timing-reason-wrap"><label>Reason for submission after 48hrs</label><textarea id="b-timing-reason"></textarea></div>
+    <label>Video available?</label>
+    <select id="b-video"><option>No</option><option>Yes</option></select>
+    <div class="conditional" id="b-video-link-wrap"><label>Video link / access details (include timestamp)</label><input id="b-video-link"></div>
+  </div>
+
+  <button class="btn btn-primary" onclick="generateBlue()"><i class="ti ti-file-check"></i>Generate report</button>
+</div>
+
+<div id="screen-match-history" class="screen">
+  <a class="backlink" onclick="showScreen('home')"><i class="ti ti-chevron-left"></i>Back</a>
+  <h1>Past matches</h1>
+  <p class="sub">Every match you've set up, most recent first.</p>
+  <div class="card">
+    <div id="match-history-list"></div>
+  </div>
+</div>
+
+<div id="screen-match-detail" class="screen">
+  <a class="backlink" onclick="showScreen('match-history')"><i class="ti ti-chevron-left"></i>Back to past matches</a>
+  <h1 id="match-detail-title">Match</h1>
+  <div class="card">
+    <div id="match-detail-summary"></div>
+    <button class="btn btn-block" id="match-detail-set-current" onclick="setAsCurrentMatch()"><i class="ti ti-circle-check"></i>Set as current match</button>
+    <button class="btn btn-block" onclick="startEditMatch(viewingMatchId)"><i class="ti ti-pencil"></i>Edit match details</button>
+    <button class="btn btn-danger btn-block" onclick="deleteCurrentMatch()"><i class="ti ti-trash"></i>Delete match</button>
+  </div>
+  <div class="card">
+    <h2>Cards logged</h2>
+    <div id="match-detail-card-list"></div>
+  </div>
+</div>
+
+<div id="screen-output" class="screen">
+  <a class="backlink" onclick="backFromOutput()"><i class="ti ti-chevron-left"></i>Back</a>
+  <h1>Ready to submit</h1>
+  <pre class="output" id="output-text"></pre>
+  <button class="btn btn-primary" onclick="downloadPdf()" id="pdf-btn"><i class="ti ti-file-type-pdf"></i>Download PDF</button>
+  <div class="row2" style="margin-top:10px;">
+    <button class="btn" onclick="sharePdf()" id="share-btn"><i class="ti ti-share"></i>Share PDF</button>
+    <button class="btn" onclick="copyOutput()" id="copy-btn"><i class="ti ti-copy"></i>Copy text</button>
+  </div>
+  <div class="row2" style="margin-top:10px;">
+    <button class="btn" onclick="downloadOutput()"><i class="ti ti-file-text"></i>Download .txt</button>
+    <button class="btn" onclick="editCurrentCard()"><i class="ti ti-pencil"></i>Edit report</button>
+  </div>
+  <button class="btn btn-danger btn-block" onclick="deleteCurrentCard()"><i class="ti ti-trash"></i>Delete report</button>
+</div>
+
+</div><!-- /.app -->
+
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script>
+// ---------- Storage ----------
+const DB = {
+  settings: () => JSON.parse(localStorage.getItem('moa_settings') || '{}'),
+  saveSettings: (s) => localStorage.setItem('moa_settings', JSON.stringify(s)),
+  matches: () => JSON.parse(localStorage.getItem('moa_matches') || '[]'),
+  saveMatches: (m) => localStorage.setItem('moa_matches', JSON.stringify(m)),
+  cards: () => JSON.parse(localStorage.getItem('moa_cards') || '[]'),
+  saveCards: (c) => localStorage.setItem('moa_cards', JSON.stringify(c)),
+  currentMatchId: () => localStorage.getItem('moa_current_match'),
+  setCurrentMatchId: (id) => localStorage.setItem('moa_current_match', id),
+  matchContext: (matchId) => { try { return JSON.parse(localStorage.getItem('moa_ctx_' + matchId) || 'null'); } catch (e) { return null; } },
+  saveMatchContext: (matchId, ctx) => localStorage.setItem('moa_ctx_' + matchId, JSON.stringify(ctx)),
+};
+
+// ---------- Validation ----------
+function clearInvalid(ids) {
+  ids.forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('invalid'); });
+}
+// pairs: [[elementId, label], ...]. Returns array of missing labels; marks fields invalid and
+// scrolls/focuses the first one.
+function validateRequired(pairs) {
+  clearInvalid(pairs.map(p => p[0]));
+  const missing = [];
+  let firstInvalid = null;
+  pairs.forEach(([id, label]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (!el.value.trim()) {
+      el.classList.add('invalid');
+      missing.push(label);
+      if (!firstInvalid) firstInvalid = el;
+    }
+  });
+  if (firstInvalid) {
+    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    firstInvalid.focus();
+  }
+  return missing;
+}
+document.addEventListener('input', (e) => {
+  if (e.target.classList && e.target.classList.contains('invalid')) e.target.classList.remove('invalid');
+});
+document.addEventListener('change', (e) => {
+  if (e.target.classList && e.target.classList.contains('invalid')) e.target.classList.remove('invalid');
+});
+
+// World Rugby Law 9 — master list (see chat: 9.22, 9.26, 9.7d, 9.15 clause added; 9.13
+// kept in the older wording pending confirmation of what PlayHQ's dropdown shows)
+const LAWS = [
+"9.1 When a player and an opponent are running for the ball, neither player may charge or push the other except shoulder-to-shoulder.",
+"9.2 An offside player must not intentionally obstruct an opponent or interfere with play.",
+"9.3 A player must not intentionally prevent an opponent from tackling or attempting to tackle the ball-carrier.",
+"9.4 A player must not intentionally prevent an opponent from having the opportunity to play the ball, other than by competing for possession.",
+"9.5 A ball-carrier must not intentionally run into an off-side team-mate to obstruct the opposition.",
+"9.6 A player must not obstruct, or in any way interfere with an opponent while the ball is dead.",
+"9.7(a) Intentionally infringe any law of the game.",
+"9.7(b) Intentionally knock, place, push or throw the ball with arm or hand from the playing area.",
+"9.7(c) Do anything that may lead the match officials to consider that an opponent has committed an infringement.",
+"9.7(d) Waste time.",
+"9.8 A team must not repeatedly commit the same offence.",
+"9.9 A player must not repeatedly infringe the laws.",
+"9.10 Repeated team infringement — general caution then yellow card to the guilty player(s).",
+"9.11 Players must not do anything that is reckless or dangerous to others including leading with the elbow or forearm, or jumping into, or over, a tackler.",
+"9.12 A player must not physically or verbally abuse anyone (biting, punching, contact with the eye/eye area, striking with arm/shoulder/head/knee(s), stamping, trampling, tripping or kicking).",
+"9.13 A player must not tackle an opponent early, late or dangerously. Dangerous tackling includes, but is not limited to, tackling or attempting to tackle an opponent above the line of the shoulders even if the tackle starts below the line of the shoulders, or tackling or attempting to tackle an opponent above the base of the sternum while either player is running in open field play.",
+"9.14 A player must not tackle an opponent who is not in possession of the ball.",
+"9.15 A player not in possession must not hold, push, charge or obstruct an opponent not in possession, or push a teammate with or without the ball (except in scrum, ruck or maul).",
+"9.16 A player must not charge or knock down an opponent carrying the ball without attempting to grasp that player.",
+"9.17 A player must not tackle, charge, pull, push or grasp an opponent whose feet are off the ground.",
+"9.18 A player must not lift an opponent off the ground and drop or drive that player so that their head and/or upper body make contact with the ground.",
+"9.19(a) Scrum front row must not form at a distance and rush against opponents.",
+"9.19(b) A front-row player must not pull an opponent.",
+"9.19(c) A front-row player must not intentionally lift an opponent off their feet or force the opponent upwards out of the scrum.",
+"9.19(d) A front-row player must not intentionally collapse a scrum.",
+"9.20(a) A player must not charge into a ruck or maul without binding.",
+"9.20(b) A player must not make contact with an opponent above the line of the shoulders (ruck/maul).",
+"9.20(c) A player must not intentionally collapse a ruck or a maul.",
+"9.20(d) A player may drive a stealer/jackler backwards but must not roll, pull or twist them.",
+"9.20(e) A player must not drop their weight onto an opponent or target the lower limbs.",
+"9.21 A player must not retaliate.",
+"9.22 Teams must not use the 'flying wedge'.",
+"9.23 A player must not attempt to kick the ball from the hands of the ball-carrier.",
+"9.24 A ball-carrier is permitted to hand off an opponent provided excessive force is not used.",
+"9.25 A player must not intentionally charge or obstruct an opponent who has just kicked the ball.",
+"9.26 In open play, any player may lift or support a team-mate, and must lower that player safely once the ball is won.",
+"9.27 A player must not do anything that is against the spirit of good sportsmanship.",
+"9.28 Players must respect the authority of the referee, must not dispute decisions, and must stop immediately when the referee blows the whistle.",
+"Other"
+];
+
+const LAW_ITEMS = LAWS.filter(l => l !== 'Other').map(l => {
+  const sp = l.indexOf(' ');
+  return { code: l.slice(0, sp), text: l.slice(sp + 1) };
+});
+
+const SYMPTOMS = [
+  "Loss of consciousness",
+  "Unsteady on feet / balance issue",
+  "Confusion or disorientation",
+  "Blank or vacant stare",
+  "Clutching head",
+  "Slow to get up",
+];
+
+// ---------- Navigation ----------
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  if (name === 'home') renderHome();
+  if (name === 'match-history') renderMatchHistory();
+}
+
+// ---------- Settings ----------
+function loadSettings() {
+  const s = DB.settings();
+  document.getElementById('set-official').value = s.official || '';
+  document.getElementById('set-phone').value = s.phone || '';
+  document.getElementById('set-union').value = s.union || '';
+}
+function saveSettings() {
+  DB.saveSettings({
+    official: document.getElementById('set-official').value,
+    phone: document.getElementById('set-phone').value,
+    union: document.getElementById('set-union').value,
+  });
+}
+
+// ---------- Match ----------
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+let editingSetupMatchId = null;
+
+function startNewMatch() {
+  editingSetupMatchId = null;
+  document.getElementById('match-setup-title').textContent = 'Match setup';
+  document.getElementById('match-setup-sub').textContent = 'Today or past dates become your current match right away. Future dates get saved as upcoming — set them current when matchday arrives.';
+  document.getElementById('match-setup-save-btn').innerHTML = '<i class="ti ti-device-floppy"></i>Save match';
+  ['m-date','m-time','m-teamA','m-teamB','m-competition','m-venue'].forEach(id => {
+    document.getElementById(id).value = '';
+    document.getElementById(id).classList.remove('invalid');
+  });
+  showScreen('match-setup');
+}
+
+function startEditMatch(id) {
+  const match = DB.matches().find(m => m.id === id);
+  if (!match) return;
+  editingSetupMatchId = id;
+  document.getElementById('match-setup-title').textContent = 'Edit match';
+  document.getElementById('match-setup-sub').textContent = 'Update this match\u2019s details. Cards already logged for it aren\u2019t affected.';
+  document.getElementById('match-setup-save-btn').innerHTML = '<i class="ti ti-device-floppy"></i>Save changes';
+  document.getElementById('m-date').value = match.date || '';
+  document.getElementById('m-time').value = match.time || '';
+  document.getElementById('m-teamA').value = match.teamA || '';
+  document.getElementById('m-teamB').value = match.teamB || '';
+  document.getElementById('m-competition').value = match.competition || '';
+  document.getElementById('m-venue').value = match.venue || '';
+  ['m-date','m-time','m-teamA','m-teamB','m-competition','m-venue'].forEach(id => document.getElementById(id).classList.remove('invalid'));
+  showScreen('match-setup');
+}
+
+function cancelMatchSetup() {
+  const returnTo = editingSetupMatchId;
+  editingSetupMatchId = null;
+  if (returnTo) { viewMatchDetail(returnTo); }
+  else { showScreen('home'); }
+}
+
+function saveMatch() {
+  const missing = validateRequired([
+    ['m-date', 'date'],
+    ['m-teamA', 'team A'],
+    ['m-teamB', 'team B'],
+  ]);
+  if (missing.length) { alert('Please fill in: ' + missing.join(', ') + '.'); return; }
+
+  const fields = {
+    date: document.getElementById('m-date').value,
+    time: document.getElementById('m-time').value,
+    teamA: document.getElementById('m-teamA').value,
+    teamB: document.getElementById('m-teamB').value,
+    competition: document.getElementById('m-competition').value,
+    venue: document.getElementById('m-venue').value,
+  };
+
+  if (editingSetupMatchId) {
+    const matches = DB.matches();
+    const idx = matches.findIndex(m => m.id === editingSetupMatchId);
+    if (idx !== -1) {
+      matches[idx] = Object.assign({}, matches[idx], fields);
+      DB.saveMatches(matches);
+    }
+    const returnTo = editingSetupMatchId;
+    editingSetupMatchId = null;
+    viewMatchDetail(returnTo);
+    return;
+  }
+
+  const match = Object.assign({ id: 'm_' + Date.now() }, fields);
+  const matches = DB.matches();
+  matches.push(match);
+  DB.saveMatches(matches);
+
+  const isFuture = match.date && match.date > todayStr();
+  if (!isFuture) {
+    DB.setCurrentMatchId(match.id);
+    showScreen('home');
+  } else {
+    viewMatchDetail(match.id);
+  }
+}
+
+function getCurrentMatch() {
+  const id = DB.currentMatchId();
+  return DB.matches().find(m => m.id === id) || null;
+}
+
+const CARD_ICONS = { yellow: 'ti-flag-filled', red: 'ti-square-rounded-x-filled', blue: 'ti-first-aid-kit' };
+
+function cardRowsHtml(cards) {
+  if (cards.length === 0) return '<div class="empty">No cards logged for this match.</div>';
+  return cards.map(c => {
+    let typeLabel = c.type[0].toUpperCase() + c.type.slice(1);
+    if (c.type === 'red') typeLabel += c.role === 'ar' ? ' (AR)' : ' (Referee)';
+    const detail = c.type === 'blue' ? (c.fields.symptoms || '') : (c.lawShort || '');
+    return `
+    <div class="card-row" onclick="viewCard('${c.id}')">
+      <div class="tag ${c.type}"><i class="ti ${CARD_ICONS[c.type] || 'ti-square-rounded-filled'}"></i></div>
+      <div class="meta">
+        <p class="name">${c.player.name || '(no name)'} <span style="color:var(--muted); font-weight:400;">#${c.player.number || ''}</span></p>
+        <p class="sub2">${typeLabel} &middot; ${detail}</p>
+      </div>
+      <i class="ti ti-chevron-right"></i>
+    </div>`;
+  }).join('');
+}
+
+function renderHome() {
+  loadSettings();
+  const match = getCurrentMatch();
+  const noMatch = document.getElementById('no-match');
+  const summary = document.getElementById('match-summary');
+  const cardsCard = document.getElementById('match-cards-card');
+  if (!match) {
+    noMatch.style.display = 'block';
+    summary.innerHTML = '';
+    cardsCard.style.display = 'none';
+    return;
+  }
+  noMatch.style.display = 'none';
+  summary.innerHTML = `<p style="margin:0 0 2px; font-weight:500;">${match.teamA} vs ${match.teamB}</p>
+    <p style="margin:0; font-size:13px; color:var(--muted);">${match.date || ''} &middot; ${match.competition || ''}</p>`;
+  cardsCard.style.display = 'block';
+
+  const cards = DB.cards().filter(c => c.matchId === match.id);
+  document.getElementById('card-list').innerHTML = cardRowsHtml(cards);
+}
+
+// ---------- Match history ----------
+function matchRowHtml(m, currentId, allCards) {
+  const count = allCards.filter(c => c.matchId === m.id).length;
+  const isCurrent = m.id === currentId;
+  return `
+  <div class="card-row" onclick="viewMatchDetail('${m.id}')">
+    <div class="tag" style="background:${isCurrent ? 'var(--accent)' : 'var(--faint)'}"><i class="ti ${isCurrent ? 'ti-circle-check-filled' : 'ti-calendar-event'}"></i></div>
+    <div class="meta">
+      <p class="name">${m.teamA} vs ${m.teamB}${isCurrent ? ' <span style="color:var(--accent); font-weight:600;">&middot; current</span>' : ''}</p>
+      <p class="sub2">${m.date || ''} &middot; ${m.competition || ''} &middot; ${count} card${count === 1 ? '' : 's'}</p>
+    </div>
+    <i class="ti ti-chevron-right"></i>
+  </div>`;
+}
+
+function renderMatchHistory() {
+  const today = todayStr();
+  const matches = DB.matches();
+  const list = document.getElementById('match-history-list');
+  const currentId = DB.currentMatchId();
+  if (matches.length === 0) {
+    list.innerHTML = '<div class="empty">No matches logged yet.</div>';
+    return;
+  }
+  const allCards = DB.cards();
+  const upcoming = matches.filter(m => m.date && m.date > today)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const pastAndToday = matches.filter(m => !(m.date && m.date > today))
+    .sort((a, b) => (b.date || '').localeCompare(a.date || '') || b.id.localeCompare(a.id));
+
+  let html = '';
+  if (upcoming.length) {
+    html += `<h2 style="margin-top:0;">Upcoming</h2>` + upcoming.map(m => matchRowHtml(m, currentId, allCards)).join('');
+  }
+  if (pastAndToday.length) {
+    html += `<h2 style="${upcoming.length ? 'margin-top:20px;' : 'margin-top:0;'}">Today &amp; past</h2>` + pastAndToday.map(m => matchRowHtml(m, currentId, allCards)).join('');
+  }
+  list.innerHTML = html;
+}
+
+let viewingMatchId = null;
+
+function viewMatchDetail(id) {
+  const match = DB.matches().find(m => m.id === id);
+  if (!match) return;
+  viewingMatchId = id;
+  document.getElementById('match-detail-title').textContent = `${match.teamA} vs ${match.teamB}`;
+  document.getElementById('match-detail-summary').innerHTML =
+    `<p style="margin:0 0 2px; font-weight:500;">${match.teamA} vs ${match.teamB}</p>
+     <p style="margin:0; font-size:13px; color:var(--muted);">${match.date || ''} &middot; ${match.competition || ''}${match.venue ? ' &middot; ' + match.venue : ''}</p>`;
+  const isCurrent = id === DB.currentMatchId();
+  const setBtn = document.getElementById('match-detail-set-current');
+  setBtn.style.display = isCurrent ? 'none' : 'block';
+  const cards = DB.cards().filter(c => c.matchId === id);
+  document.getElementById('match-detail-card-list').innerHTML = cardRowsHtml(cards);
+  showScreen('match-detail');
+}
+
+function setAsCurrentMatch() {
+  if (!viewingMatchId) return;
+  DB.setCurrentMatchId(viewingMatchId);
+  showScreen('home');
+}
+
+function deleteCurrentMatch() {
+  if (!viewingMatchId) return;
+  const match = DB.matches().find(m => m.id === viewingMatchId);
+  const cardCount = DB.cards().filter(c => c.matchId === viewingMatchId).length;
+  const msg = cardCount
+    ? `Delete this match and its ${cardCount} logged card${cardCount === 1 ? '' : 's'}? This can't be undone.`
+    : `Delete this match? This can't be undone.`;
+  if (!confirm(msg)) return;
+  DB.saveMatches(DB.matches().filter(m => m.id !== viewingMatchId));
+  DB.saveCards(DB.cards().filter(c => c.matchId !== viewingMatchId));
+  localStorage.removeItem('moa_ctx_' + viewingMatchId);
+  if (DB.currentMatchId() === viewingMatchId) { DB.setCurrentMatchId(''); }
+  viewingMatchId = null;
+  showScreen('match-history');
+}
+
+// ---------- Backup ----------
+function exportBackup() {
+  const data = {
+    exportedAt: new Date().toISOString(),
+    settings: DB.settings(),
+    matches: DB.matches(),
+    cards: DB.cards(),
+    currentMatchId: DB.currentMatchId(),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `card-reports-backup-${todayStr()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importBackup(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    let data;
+    try { data = JSON.parse(reader.result); }
+    catch (e) { alert('That file isn\'t a valid backup.'); event.target.value = ''; return; }
+
+    if (!data || !Array.isArray(data.matches) || !Array.isArray(data.cards)) {
+      alert('That file isn\'t a valid backup.');
+      event.target.value = '';
+      return;
+    }
+    const existingMatches = DB.matches();
+    const existingCards = DB.cards();
+    const existingMatchIds = new Set(existingMatches.map(m => m.id));
+    const existingCardIds = new Set(existingCards.map(c => c.id));
+    const newMatches = data.matches.filter(m => !existingMatchIds.has(m.id));
+    const newCards = data.cards.filter(c => !existingCardIds.has(c.id));
+
+    if (!confirm(`Import ${newMatches.length} match(es) and ${newCards.length} card(s) not already in this browser? Your settings will be overwritten with the backup's settings.`)) {
+      event.target.value = '';
+      return;
+    }
+    DB.saveMatches(existingMatches.concat(newMatches));
+    DB.saveCards(existingCards.concat(newCards));
+    if (data.settings) DB.saveSettings(data.settings);
+    if (!DB.currentMatchId() && data.currentMatchId) DB.setCurrentMatchId(data.currentMatchId);
+
+    event.target.value = '';
+    showScreen('home');
+    alert('Backup imported.');
+  };
+  reader.readAsText(file);
+}
+
+let currentOutputCard = null;
+let currentOutputBackScreen = 'home';
+
+function viewCard(id) {
+  const c = DB.cards().find(x => x.id === id);
+  if (!c) return;
+  currentOutputCard = c;
+  currentOutputBackScreen = document.getElementById('screen-match-detail').classList.contains('active') ? 'match-detail' : 'home';
+  document.getElementById('output-text').textContent = c.outputText;
+  updateShareButtonVisibility();
+  showScreen('output');
+}
+
+function backFromOutput() {
+  if (currentOutputBackScreen === 'match-detail' && viewingMatchId) {
+    viewMatchDetail(viewingMatchId);
+  } else {
+    showScreen('home');
+  }
+}
+
+// ---------- Add card flow ----------
+let editingCardId = null;
+let editingMatchId = null;
+
+function cancelForm() {
+  const returnTo = editingMatchId;
+  editingCardId = null;
+  editingMatchId = null;
+  if (returnTo && returnTo !== DB.currentMatchId()) { viewMatchDetail(returnTo); }
+  else { showScreen('home'); }
+}
+
+function editCard(id) {
+  const c = DB.cards().find(x => x.id === id);
+  if (!c) return;
+  editingCardId = c.id;
+  editingMatchId = c.matchId;
+  if (c.type === 'yellow') {
+    prepYellowForm(c.fields);
+    showScreen('yellow-form');
+  } else if (c.type === 'red') {
+    currentRedRole = c.role;
+    prepRedForm(c.role, c.fields);
+    showScreen('red-form');
+  } else if (c.type === 'blue') {
+    prepBlueForm(c.fields);
+    showScreen('blue-form');
+  }
+}
+
+function editCurrentCard() {
+  if (!currentOutputCard) return;
+  editCard(currentOutputCard.id);
+}
+
+function deleteCurrentCard() {
+  if (!currentOutputCard) return;
+  if (!confirm('Delete this report? This can\'t be undone.')) return;
+  const matchId = currentOutputCard.matchId;
+  const cards = DB.cards().filter(c => c.id !== currentOutputCard.id);
+  DB.saveCards(cards);
+  currentOutputCard = null;
+  if (matchId !== DB.currentMatchId()) { viewMatchDetail(matchId); }
+  else { showScreen('home'); }
+}
+
+function startAddCard() {
+  const match = getCurrentMatch();
+  if (!match) { alert('Set up a match first.'); return; }
+  editingCardId = null;
+  editingMatchId = null;
+  showScreen('add-type');
+}
+
+function chooseType(type) {
+  if (type === 'yellow') {
+    prepYellowForm();
+    showScreen('yellow-form');
+  } else if (type === 'red') {
+    showScreen('red-role');
+  } else if (type === 'blue') {
+    prepBlueForm();
+    showScreen('blue-form');
+  }
+}
+
+let currentRedRole = 'referee';
+
+function chooseRedRole(role) {
+  currentRedRole = role;
+  prepRedForm(role);
+  showScreen('red-form');
+}
+
+function prepYellowForm(existing) {
+  const match = editingMatchId ? DB.matches().find(m => m.id === editingMatchId) : getCurrentMatch();
+  document.getElementById('yellow-form-title').textContent = existing ? 'Edit yellow card report' : 'Yellow card report';
+  const teamSel = document.getElementById('y-team');
+  teamSel.innerHTML = `<option value="${match.teamA}">${match.teamA}</option><option value="${match.teamB}">${match.teamB}</option>`;
+  const lawSel = document.getElementById('y-law');
+  lawSel.innerHTML = LAWS.map(l => `<option value="${l.replace(/"/g,'&quot;')}">${l}</option>`).join('');
+
+  if (existing) {
+    document.getElementById('y-name').value = existing.playerName || '';
+    document.getElementById('y-number').value = existing.playerNumber || '';
+    document.getElementById('y-team').value = existing.playerTeam || '';
+    document.getElementById('y-player-union').value = existing.playerUnion || '';
+    document.getElementById('y-period').value = existing.period || '2';
+    document.getElementById('y-elapsed').value = existing.elapsed || '';
+    document.getElementById('y-score-for').value = existing.scoreFor || '';
+    document.getElementById('y-score-against').value = existing.scoreAgainst || '';
+    document.getElementById('y-proximity').value = existing.proximity || '';
+    document.getElementById('y-warn-player').value = existing.warnPlayer || 'No';
+    document.getElementById('y-warn-team').value = existing.warnTeam || 'No';
+    document.getElementById('y-head-contact').value = existing.headContact || 'No';
+    document.getElementById('y-danger').value = existing.danger || 'Medium';
+    document.getElementById('y-mitigation-reason').value = existing.mitigationReason || '';
+    document.getElementById('y-mitigation-applied').value = existing.mitigationApplied || 'N/A';
+    document.getElementById('y-n-location').value = existing.location || '';
+    document.getElementById('y-timing').value = existing.timing || 'Within 24hrs';
+    document.getElementById('y-timing-reason').value = existing.timingReason || '';
+    document.getElementById('y-video').value = existing.video || 'No';
+    document.getElementById('y-video-link').value = existing.videoLink || '';
+    const isOther = (existing.law || '').startsWith('Other');
+    document.getElementById('y-law').value = isOther ? 'Other' : (existing.law || LAWS[0]);
+    document.getElementById('y-law-other').value = isOther ? (existing.law || '').replace(/^Other\s*—\s*/, '') : '';
+    // narrative fields were concatenated on generate — leave the sub-fields blank on edit and
+    // put the full stored narrative back into the "action" box so nothing is lost
+    document.getElementById('y-n-action').value = existing.narrative || '';
+    document.getElementById('y-n-contact').value = '';
+    document.getElementById('y-n-ball').value = '';
+    document.getElementById('y-n-outcome').value = '';
+  } else {
+    document.getElementById('y-player-union').value = DB.settings().union || '';
+    document.getElementById('y-law-other').value = '';
+    document.getElementById('y-timing-reason').value = '';
+    document.getElementById('y-video-link').value = '';
+    document.getElementById('y-name').value = '';
+    document.getElementById('y-number').value = '';
+    document.getElementById('y-elapsed').value = '';
+    const ctx = DB.matchContext(match.id);
+    if (ctx) {
+      if (ctx.period) document.getElementById('y-period').value = ctx.period;
+      if (ctx.scoreFor) document.getElementById('y-score-for').value = ctx.scoreFor;
+      if (ctx.scoreAgainst) document.getElementById('y-score-against').value = ctx.scoreAgainst;
+      if (ctx.team) document.getElementById('y-team').value = ctx.team;
+    } else {
+      document.getElementById('y-score-for').value = '';
+      document.getElementById('y-score-against').value = '';
+    }
+  }
+  toggleLawOther();
+  document.getElementById('y-timing-reason-wrap').classList.toggle('show', document.getElementById('y-timing').value === 'After 48hrs');
+  document.getElementById('y-video-link-wrap').classList.toggle('show', document.getElementById('y-video').value === 'Yes');
+}
+
+document.getElementById('y-law') && document.getElementById('y-law').addEventListener('change', toggleLawOther);
+function toggleLawOther() {
+  const isOther = document.getElementById('y-law').value === 'Other';
+  document.getElementById('y-law-other-wrap').classList.toggle('show', isOther);
+}
+document.addEventListener('change', function(e) {
+  if (e.target.id === 'y-law') toggleLawOther();
+  if (e.target.id === 'y-timing') {
+    document.getElementById('y-timing-reason-wrap').classList.toggle('show', e.target.value === 'After 48hrs');
+  }
+  if (e.target.id === 'y-video') {
+    document.getElementById('y-video-link-wrap').classList.toggle('show', e.target.value === 'Yes');
+  }
+  if (e.target.id === 'r-prior-caution') {
+    document.getElementById('r-prior-caution-wrap').classList.toggle('show', e.target.value === 'Yes');
+  }
+  if (e.target.id === 'r-other-carded') {
+    document.getElementById('r-other-carded-wrap').classList.toggle('show', e.target.value === 'Yes');
+  }
+  if (e.target.id === 'r-law-other-check') {
+    document.getElementById('r-law-other-wrap').classList.toggle('show', e.target.checked);
+  }
+  if (e.target.id === 'r-based-on-ar') {
+    document.getElementById('r-ar-name-wrap').classList.toggle('show', e.target.value === 'Yes');
+  }
+  if (e.target.id === 'r-timing') {
+    document.getElementById('r-timing-reason-wrap').classList.toggle('show', e.target.value === 'After 48hrs');
+  }
+  if (e.target.id === 'r-video') {
+    document.getElementById('r-video-link-wrap').classList.toggle('show', e.target.value === 'Yes');
+  }
+  if (e.target.id === 'b-initiator') {
+    document.getElementById('b-initiator-other-wrap').classList.toggle('show', e.target.value === 'Other');
+  }
+  if (e.target.id === 'b-symptom-other-check') {
+    document.getElementById('b-symptom-other-wrap').classList.toggle('show', e.target.checked);
+  }
+  if (e.target.id === 'b-returned') {
+    document.getElementById('b-returned-warn').classList.toggle('show', e.target.value === 'Yes');
+  }
+  if (e.target.id === 'b-timing') {
+    document.getElementById('b-timing-reason-wrap').classList.toggle('show', e.target.value === 'After 48hrs');
+  }
+  if (e.target.id === 'b-video') {
+    document.getElementById('b-video-link-wrap').classList.toggle('show', e.target.value === 'Yes');
+  }
+});
+
+function commitCard(match, type, player, fields, lawShort, output, extra) {
+  const cards = DB.cards();
+  let record;
+  const idx = editingCardId ? cards.findIndex(c => c.id === editingCardId) : -1;
+  if (idx !== -1) {
+    record = Object.assign({}, cards[idx], { player, fields, lawShort, outputText: output, updatedAt: new Date().toISOString() }, extra || {});
+    cards[idx] = record;
+  } else {
+    record = Object.assign({ id: 'c_' + Date.now(), matchId: match.id, type, player, fields, lawShort, outputText: output, createdAt: new Date().toISOString() }, extra || {});
+    cards.push(record);
+  }
+  DB.saveCards(cards);
+  editingCardId = null;
+  editingMatchId = null;
+  currentOutputCard = record;
+  currentOutputBackScreen = (match.id !== DB.currentMatchId()) ? 'match-detail' : 'home';
+  viewingMatchId = match.id;
+  document.getElementById('output-text').textContent = output;
+  updateShareButtonVisibility();
+  showScreen('output');
+}
+
+function generateYellow() {
+  const match = editingMatchId ? DB.matches().find(m => m.id === editingMatchId) : getCurrentMatch();
+  const settings = DB.settings();
+  const val = id => document.getElementById(id).value.trim();
+
+  const missing = validateRequired([
+    ['y-name', 'player name'],
+    ['y-elapsed', 'elapsed time'],
+    ['y-score-for', 'score (player\u2019s team)'],
+    ['y-score-against', 'score (opposition)'],
+  ]);
+  if (val('y-law') === 'Other' && !val('y-law-other')) {
+    document.getElementById('y-law-other').classList.add('invalid');
+    missing.push('law details for "Other"');
+  }
+  if (val('y-timing') === 'After 48hrs' && !val('y-timing-reason')) {
+    document.getElementById('y-timing-reason').classList.add('invalid');
+    missing.push('reason for late submission');
+  }
+  if (missing.length) { alert('Please fill in: ' + missing.join(', ') + '.'); return; }
+
+  const playerName = val('y-name');
+  const law = val('y-law') === 'Other' ? ('Other — ' + val('y-law-other')) : val('y-law');
+  const narrative = [
+    `${val('y-elapsed')} - ${val('y-n-action')}`.trim(),
+    val('y-n-ball'),
+    val('y-n-contact'),
+    val('y-n-outcome'),
+  ].filter(Boolean).join(' ');
+
+  const fields = {
+    playerName,
+    playerNumber: val('y-number'),
+    playerTeam: val('y-team'),
+    playerUnion: val('y-player-union'),
+    law,
+    period: val('y-period'),
+    elapsed: val('y-elapsed'),
+    scoreFor: val('y-score-for'),
+    scoreAgainst: val('y-score-against'),
+    proximity: val('y-proximity'),
+    warnPlayer: val('y-warn-player'),
+    warnTeam: val('y-warn-team'),
+    headContact: val('y-head-contact'),
+    danger: val('y-danger'),
+    mitigationReason: val('y-mitigation-reason'),
+    mitigationApplied: val('y-mitigation-applied'),
+    location: val('y-n-location'),
+    narrative,
+    timing: val('y-timing'),
+    timingReason: val('y-timing-reason'),
+    video: val('y-video'),
+    videoLink: val('y-video-link'),
+  };
+
+  const output =
+`RUGBY CANADA
+PLAYER CAUTION REPORT (Yellow Card Report)
+
+Fixture: ${match.date || ''} ${match.teamA} v ${match.teamB} at time ${match.time || ''}
+Competition: ${match.competition || ''}
+Official: ${settings.official || ''} (Referee)
+Referee Phone Number: ${settings.phone || ''}
+Referee Provincial Union: ${settings.union || ''}
+Submission Timing: ${fields.timing}
+${fields.timing === 'After 48hrs' ? 'Reason for submission after 48hrs: ' + fields.timingReason + '\n' : ''}Players Team: ${fields.playerTeam}
+Player Being Reported: ${fields.playerName}
+Player Jersey Number: ${fields.playerNumber}
+Player Provincial Union: ${fields.playerUnion}
+Law: ${fields.law}
+Period: ${fields.period}
+Elapsed time in period: ${fields.elapsed}
+Score at the time of the incident (Player's team first): ${fields.scoreFor} - ${fields.scoreAgainst}
+Proximity (mtrs): ${fields.proximity}
+Had any warnings been issued to the Player?: ${fields.warnPlayer}
+Had any warnings been issued to the Player's Team?: ${fields.warnTeam}
+Was there head or neck/throat contact?: ${fields.headContact}
+What was the degree of Danger?: ${fields.danger}
+What was the reason for mitigation?: ${fields.mitigationReason}
+Was mitigation applied to the sanction?: ${fields.mitigationApplied}
+
+Incident description:
+${fields.location ? fields.location + ' - ' : ''}${narrative}
+
+Is a video available showing the incident?: ${fields.video}
+${fields.video === 'Yes' ? 'Video link / access details: ' + fields.videoLink : ''}`;
+
+  const player = { name: fields.playerName, number: fields.playerNumber, team: fields.playerTeam, union: fields.playerUnion };
+  const wasEditing = !!editingCardId;
+  commitCard(match, 'yellow', player, fields, law.split(' ')[0], output);
+  if (!wasEditing) DB.saveMatchContext(match.id, { period: fields.period, scoreFor: fields.scoreFor, scoreAgainst: fields.scoreAgainst, team: fields.playerTeam });
+}
+
+// ---------- Red card ----------
+function prepRedForm(role, existing) {
+  const match = editingMatchId ? DB.matches().find(m => m.id === editingMatchId) : getCurrentMatch();
+  const formEl = document.getElementById('screen-red-form');
+  formEl.classList.remove('role-referee', 'role-ar');
+  formEl.classList.add(role === 'ar' ? 'role-ar' : 'role-referee');
+  document.getElementById('red-form-title').textContent =
+    (existing ? 'Edit red card report — ' : 'Red card report — ') + (role === 'ar' ? 'assistant referee' : 'referee');
+
+  const teamSel = document.getElementById('r-team');
+  teamSel.innerHTML = `<option value="${match.teamA}">${match.teamA}</option><option value="${match.teamB}">${match.teamB}</option>`;
+
+  const checklist = document.getElementById('r-law-checklist');
+  checklist.innerHTML = LAW_ITEMS.map((item, i) => `
+    <label class="check-row">
+      <input type="checkbox" class="r-law-check" value="${item.code}">
+      <span class="clabel"><span class="code">${item.code}</span><span class="ctext">${item.text}</span></span>
+    </label>`).join('') + `
+    <label class="check-row">
+      <input type="checkbox" id="r-law-other-check" class="r-law-check" value="Other">
+      <span class="clabel"><span class="code">Other</span></span>
+    </label>`;
+
+  const linkSel = document.getElementById('r-link-referee');
+  const refereeCards = DB.cards().filter(c => c.type === 'red' && c.role === 'referee' && c.matchId === match.id && (!existing || c.id !== editingCardId));
+  linkSel.innerHTML = '<option value="">— not linked —</option>' +
+    refereeCards.map(c => `<option value="${c.id}">${c.player.name} — ${c.fields.subName || 'referee report'}</option>`).join('');
+
+  if (existing) {
+    document.getElementById('r-name').value = existing.playerName || '';
+    document.getElementById('r-number').value = existing.playerNumber || '';
+    document.getElementById('r-team').value = existing.playerTeam || '';
+    document.getElementById('r-position').value = existing.playerPosition || '';
+    document.getElementById('r-player-union').value = existing.playerUnion || '';
+    document.getElementById('r-half').value = existing.half || '2';
+    document.getElementById('r-elapsed').value = existing.elapsed || '';
+    document.getElementById('r-score-for').value = existing.scoreFor || '';
+    document.getElementById('r-score-against').value = existing.scoreAgainst || '';
+    document.getElementById('r-final-for').value = existing.finalFor || '';
+    document.getElementById('r-final-against').value = existing.finalAgainst || '';
+    document.getElementById('r-proximity').value = existing.proximity || '';
+    document.getElementById('r-ball-position').value = existing.ballPosition || '';
+    document.getElementById('r-other-carded').value = existing.otherCarded || 'No';
+    document.getElementById('r-other-carded-detail').value = existing.otherCardedDetail || '';
+    document.getElementById('r-prior-caution').value = existing.priorCaution || 'No';
+    document.getElementById('r-prior-caution-type').value = existing.priorCautionType || 'Individual';
+    document.getElementById('r-warned-earlier').value = existing.warnedEarlier || 'No';
+    document.getElementById('r-sinbinned-earlier').value = existing.sinbinnedEarlier || 'No';
+    document.getElementById('r-law-other').value = '';
+    document.getElementById('r-provocation').value = existing.provocation || '';
+    document.getElementById('r-reaction').value = existing.reaction || '';
+    document.getElementById('r-injury').value = existing.injury || '';
+    document.getElementById('r-based-on-ar').value = existing.basedOnAr || 'No';
+    document.getElementById('r-ar-name').value = existing.arName || '';
+    document.getElementById('r-referee-name').value = existing.refereeName || '';
+    document.getElementById('r-link-referee').value = existing.linkedRefereeId || '';
+    document.getElementById('r-n-location').value = existing.location || '';
+    document.getElementById('r-n-action').value = existing.narrative || '';
+    document.getElementById('r-n-contact').value = '';
+    document.getElementById('r-n-outcome').value = '';
+    document.getElementById('r-timing').value = existing.timing || 'Within 24hrs';
+    document.getElementById('r-timing-reason').value = existing.timingReason || '';
+    document.getElementById('r-video').value = existing.video || 'No';
+    document.getElementById('r-video-link').value = existing.videoLink || '';
+    document.getElementById('r-sub-name').value = existing.subName || '';
+    document.getElementById('r-sub-signature').value = existing.subSignature || '';
+    document.getElementById('r-sub-contact').value = existing.subContact || '';
+    document.getElementById('r-sub-date').value = existing.subDate || '';
+    // re-check the previously selected law codes
+    const selected = (existing.law || '').split(/[,;]/).map(s => s.trim().split(' ')[0]);
+    document.querySelectorAll('.r-law-check').forEach(cb => { cb.checked = selected.includes(cb.value); });
+    if ((existing.law || '').includes('Other —')) {
+      document.getElementById('r-law-other-check').checked = true;
+      document.getElementById('r-law-other').value = (existing.law.match(/Other\s*—\s*(.*)$/) || [,''])[1];
+    }
+  } else {
+    document.getElementById('r-player-union').value = DB.settings().union || '';
+    document.getElementById('r-sub-name').value = DB.settings().official || '';
+    document.getElementById('r-sub-contact').value = DB.settings().phone || '';
+    document.getElementById('r-sub-date').value = match.date || '';
+    ['r-name','r-number','r-position','r-elapsed','r-score-for','r-score-against',
+     'r-final-for','r-final-against','r-proximity','r-ball-position','r-other-carded-detail',
+     'r-law-other','r-provocation','r-reaction','r-injury','r-ar-name','r-referee-name',
+     'r-n-location','r-n-action','r-n-contact','r-n-outcome','r-timing-reason','r-video-link'
+    ].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    const ctx = DB.matchContext(match.id);
+    if (ctx) {
+      if (ctx.period) document.getElementById('r-half').value = ctx.period;
+      if (ctx.scoreFor) document.getElementById('r-score-for').value = ctx.scoreFor;
+      if (ctx.scoreAgainst) document.getElementById('r-score-against').value = ctx.scoreAgainst;
+      if (ctx.team) document.getElementById('r-team').value = ctx.team;
+    }
+  }
+  document.getElementById('r-prior-caution-wrap').classList.toggle('show', document.getElementById('r-prior-caution').value === 'Yes');
+  document.getElementById('r-other-carded-wrap').classList.toggle('show', document.getElementById('r-other-carded').value === 'Yes');
+  document.getElementById('r-law-other-wrap').classList.toggle('show', document.getElementById('r-law-other-check').checked);
+  document.getElementById('r-ar-name-wrap').classList.toggle('show', document.getElementById('r-based-on-ar').value === 'Yes');
+  document.getElementById('r-timing-reason-wrap').classList.toggle('show', document.getElementById('r-timing').value === 'After 48hrs');
+  document.getElementById('r-video-link-wrap').classList.toggle('show', document.getElementById('r-video').value === 'Yes');
+}
+
+function generateRed() {
+  const match = editingMatchId ? DB.matches().find(m => m.id === editingMatchId) : getCurrentMatch();
+  const settings = DB.settings();
+  const val = id => (document.getElementById(id) ? document.getElementById(id).value.trim() : '');
+  const role = currentRedRole;
+
+  const missing = validateRequired([
+    ['r-name', 'player name'],
+    ['r-elapsed', 'elapsed time'],
+    ['r-score-for', 'score (player\u2019s team)'],
+    ['r-score-against', 'score (opposition)'],
+    ['r-sub-name', 'submitted-by name'],
+    ['r-sub-date', 'submission date'],
+  ]);
+
+  const checkedLaws = Array.from(document.querySelectorAll('.r-law-check:checked')).map(cb => cb.value);
+  if (checkedLaws.length === 0) { missing.push('at least one law infringed'); }
+  let lawDisplay = checkedLaws.filter(c => c !== 'Other').join(', ');
+  if (checkedLaws.includes('Other')) {
+    if (!val('r-law-other')) { document.getElementById('r-law-other').classList.add('invalid'); missing.push('law details for "Other"'); }
+    lawDisplay = [lawDisplay, 'Other — ' + val('r-law-other')].filter(Boolean).join('; ');
+  }
+  if (!lawDisplay) lawDisplay = '(none selected)';
+  if (val('r-timing') === 'After 48hrs' && !val('r-timing-reason')) {
+    document.getElementById('r-timing-reason').classList.add('invalid');
+    missing.push('reason for late submission');
+  }
+  if (missing.length) { alert('Please fill in: ' + missing.join(', ') + '.'); return; }
+
+  const playerName = val('r-name');
+
+  const narrative = [
+    `${val('r-elapsed')} - ${val('r-n-action')}`.trim(),
+    val('r-n-contact'),
+    val('r-n-outcome'),
+  ].filter(Boolean).join(' ');
+
+  const fields = {
+    playerName, playerNumber: val('r-number'), playerTeam: val('r-team'),
+    playerPosition: val('r-position'), playerUnion: val('r-player-union'),
+    half: val('r-half'), elapsed: val('r-elapsed'),
+    scoreFor: val('r-score-for'), scoreAgainst: val('r-score-against'),
+    finalFor: val('r-final-for'), finalAgainst: val('r-final-against'),
+    proximity: val('r-proximity'), ballPosition: val('r-ball-position'),
+    otherCarded: val('r-other-carded'), otherCardedDetail: val('r-other-carded-detail'),
+    priorCaution: val('r-prior-caution'), priorCautionType: val('r-prior-caution-type'),
+    warnedEarlier: val('r-warned-earlier'), sinbinnedEarlier: val('r-sinbinned-earlier'),
+    law: lawDisplay,
+    provocation: val('r-provocation'), reaction: val('r-reaction'), injury: val('r-injury'),
+    basedOnAr: val('r-based-on-ar'), arName: val('r-ar-name'),
+    refereeName: val('r-referee-name'), linkedRefereeId: val('r-link-referee'),
+    location: val('r-n-location'), narrative,
+    timing: val('r-timing'), timingReason: val('r-timing-reason'),
+    video: val('r-video'), videoLink: val('r-video-link'),
+    subName: val('r-sub-name'), subSignature: val('r-sub-signature'),
+    subContact: val('r-sub-contact'), subDate: val('r-sub-date'),
+  };
+
+  const isReferee = role !== 'ar';
+  const output =
+`RUGBY CANADA
+RED CARD REPORT — ${isReferee ? "REFEREE'S REPORT" : "ASSISTANT REFEREE'S REPORT"}
+
+Teams: ${match.teamA} v ${match.teamB}
+Competition / Division: ${match.competition || ''}
+Venue: ${match.venue || ''}
+Date: ${match.date || ''}
+Half: ${fields.half}   Elapsed time: ${fields.elapsed}
+Score at incident (player's team first): ${fields.scoreFor} - ${fields.scoreAgainst}
+Final score (player's team first): ${fields.finalFor} - ${fields.finalAgainst}
+
+Player Being Reported: ${fields.playerName}
+Team: ${fields.playerTeam}   Number: ${fields.playerNumber}   Position: ${fields.playerPosition}
+Provincial Union: ${fields.playerUnion}
+
+${isReferee ? "Referee's" : "Assistant referee's"} proximity to incident (m): ${fields.proximity}
+Position of ball relative to incident: ${fields.ballPosition}
+Other players carded in relation to this incident?: ${fields.otherCarded}${fields.otherCarded === 'Yes' ? '\n  Details: ' + fields.otherCardedDetail : ''}
+${isReferee ? `
+Previous caution issued this match?: ${fields.priorCaution}${fields.priorCaution === 'Yes' ? ' (' + fields.priorCautionType + ')' : ''}
+Warned earlier?: ${fields.warnedEarlier}
+Sin-binned earlier?: ${fields.sinbinnedEarlier}` : ''}
+
+Law(s) infringed: ${fields.law}
+
+Anything observed that may have provoked the incident?: ${fields.provocation || '—'}
+${isReferee ? `Player's reaction to the sending off: ${fields.reaction || '—'}
+Injury details: ${fields.injury || '—'}
+Sending off based on an AR's report?: ${fields.basedOnAr}${fields.basedOnAr === 'Yes' ? ' (' + fields.arName + ')' : ''}` :
+`Name of referee also submitting a report: ${fields.refereeName || '—'}`}
+
+Incident description:
+${fields.location ? fields.location + ' - ' : ''}${narrative}
+
+Submission Timing: ${fields.timing}
+${fields.timing === 'After 48hrs' ? 'Reason for submission after 48hrs: ' + fields.timingReason + '\n' : ''}Is a video available showing the incident?: ${fields.video}
+${fields.video === 'Yes' ? 'Video link / access details: ' + fields.videoLink + '\n' : ''}
+Submitted by: ${fields.subName}   Signature: ${fields.subSignature}
+Contact: ${fields.subContact}   Date: ${fields.subDate}`;
+
+  const player = { name: fields.playerName, number: fields.playerNumber, team: fields.playerTeam, union: fields.playerUnion };
+  const lawShort = (checkedLaws.filter(c => c !== 'Other')[0]) || (checkedLaws.includes('Other') ? 'Other' : '');
+  const wasEditing = !!editingCardId;
+  commitCard(match, 'red', player, fields, lawShort, output, { role: isReferee ? 'referee' : 'ar' });
+  if (!wasEditing) DB.saveMatchContext(match.id, { period: fields.half, scoreFor: fields.scoreFor, scoreAgainst: fields.scoreAgainst, team: fields.playerTeam });
+}
+
+// ---------- Blue card ----------
+function prepBlueForm(existing) {
+  const match = editingMatchId ? DB.matches().find(m => m.id === editingMatchId) : getCurrentMatch();
+  document.getElementById('blue-form-title').textContent = existing ? 'Edit blue card report' : 'Blue card — concussion recognition';
+  const teamSel = document.getElementById('b-team');
+  teamSel.innerHTML = `<option value="${match.teamA}">${match.teamA}</option><option value="${match.teamB}">${match.teamB}</option>`;
+
+  const checklist = document.getElementById('b-symptom-checklist');
+  checklist.innerHTML = SYMPTOMS.map(s => `
+    <label class="check-row">
+      <input type="checkbox" class="b-symptom-check" value="${s}">
+      <span class="clabel">${s}</span>
+    </label>`).join('') + `
+    <label class="check-row">
+      <input type="checkbox" id="b-symptom-other-check" class="b-symptom-check" value="Other">
+      <span class="clabel">Other</span>
+    </label>`;
+
+  if (existing) {
+    document.getElementById('b-name').value = existing.playerName || '';
+    document.getElementById('b-number').value = existing.playerNumber || '';
+    document.getElementById('b-team').value = existing.playerTeam || '';
+    document.getElementById('b-player-union').value = existing.playerUnion || '';
+    document.getElementById('b-period').value = existing.period || '2';
+    document.getElementById('b-elapsed').value = existing.elapsed || '';
+    document.getElementById('b-score-for').value = existing.scoreFor || '';
+    document.getElementById('b-score-against').value = existing.scoreAgainst || '';
+    document.getElementById('b-initiator').value = existing.initiator || 'Referee';
+    document.getElementById('b-initiator-other').value = existing.initiatorOther || '';
+    document.getElementById('b-n-location').value = existing.location || '';
+    document.getElementById('b-n-action').value = existing.narrative || '';
+    document.getElementById('b-n-contact').value = '';
+    document.getElementById('b-n-outcome').value = '';
+    document.getElementById('b-removed').value = existing.removed || 'Yes';
+    document.getElementById('b-returned').value = existing.returned || 'No';
+    document.getElementById('b-timing').value = existing.timing || 'Within 24hrs';
+    document.getElementById('b-timing-reason').value = existing.timingReason || '';
+    document.getElementById('b-video').value = existing.video || 'No';
+    document.getElementById('b-video-link').value = existing.videoLink || '';
+    document.getElementById('b-symptom-other').value = '';
+    const selected = (existing.symptoms || '').split(/[,;]/).map(s => s.trim().replace(/^Other\s*—.*$/, 'Other'));
+    document.querySelectorAll('.b-symptom-check').forEach(cb => { cb.checked = selected.includes(cb.value); });
+    if ((existing.symptoms || '').includes('Other —')) {
+      document.getElementById('b-symptom-other-check').checked = true;
+      document.getElementById('b-symptom-other').value = (existing.symptoms.match(/Other\s*—\s*(.*)$/) || [,''])[1];
+    }
+  } else {
+    document.getElementById('b-player-union').value = DB.settings().union || '';
+    ['b-name','b-number','b-elapsed','b-score-for','b-score-against','b-initiator-other',
+     'b-symptom-other','b-n-location','b-n-action','b-n-contact','b-n-outcome',
+     'b-timing-reason','b-video-link'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    document.getElementById('b-returned').value = 'No';
+    document.getElementById('b-removed').value = 'Yes';
+    const ctx = DB.matchContext(match.id);
+    if (ctx) {
+      if (ctx.period) document.getElementById('b-period').value = ctx.period;
+      if (ctx.scoreFor) document.getElementById('b-score-for').value = ctx.scoreFor;
+      if (ctx.scoreAgainst) document.getElementById('b-score-against').value = ctx.scoreAgainst;
+      if (ctx.team) document.getElementById('b-team').value = ctx.team;
+    }
+  }
+  document.getElementById('b-initiator-other-wrap').classList.toggle('show', document.getElementById('b-initiator').value === 'Other');
+  document.getElementById('b-symptom-other-wrap').classList.toggle('show', document.getElementById('b-symptom-other-check').checked);
+  document.getElementById('b-returned-warn').classList.toggle('show', document.getElementById('b-returned').value === 'Yes');
+  document.getElementById('b-timing-reason-wrap').classList.toggle('show', document.getElementById('b-timing').value === 'After 48hrs');
+  document.getElementById('b-video-link-wrap').classList.toggle('show', document.getElementById('b-video').value === 'Yes');
+}
+
+function generateBlue() {
+  const match = editingMatchId ? DB.matches().find(m => m.id === editingMatchId) : getCurrentMatch();
+  const settings = DB.settings();
+  const val = id => (document.getElementById(id) ? document.getElementById(id).value.trim() : '');
+
+  const missing = validateRequired([
+    ['b-name', 'player name'],
+    ['b-elapsed', 'elapsed time'],
+    ['b-score-for', 'score (player\u2019s team)'],
+    ['b-score-against', 'score (opposition)'],
+  ]);
+  if (val('b-initiator') === 'Other' && !val('b-initiator-other')) {
+    document.getElementById('b-initiator-other').classList.add('invalid');
+    missing.push('initiator details for "Other"');
+  }
+  if (val('b-timing') === 'After 48hrs' && !val('b-timing-reason')) {
+    document.getElementById('b-timing-reason').classList.add('invalid');
+    missing.push('reason for late submission');
+  }
+  if (missing.length) { alert('Please fill in: ' + missing.join(', ') + '.'); return; }
+
+  const playerName = val('b-name');
+  const checkedSymptoms = Array.from(document.querySelectorAll('.b-symptom-check:checked')).map(cb => cb.value);
+  let symptomsDisplay = checkedSymptoms.filter(s => s !== 'Other').join(', ');
+  if (checkedSymptoms.includes('Other')) {
+    symptomsDisplay = [symptomsDisplay, 'Other — ' + val('b-symptom-other')].filter(Boolean).join('; ');
+  }
+  if (!symptomsDisplay) symptomsDisplay = '(none selected)';
+
+  const narrative = [
+    `${val('b-elapsed')} - ${val('b-n-action')}`.trim(),
+    val('b-n-contact'),
+    val('b-n-outcome'),
+  ].filter(Boolean).join(' ');
+
+  const fields = {
+    playerName, playerNumber: val('b-number'), playerTeam: val('b-team'), playerUnion: val('b-player-union'),
+    period: val('b-period'), elapsed: val('b-elapsed'),
+    scoreFor: val('b-score-for'), scoreAgainst: val('b-score-against'),
+    initiator: val('b-initiator'), initiatorOther: val('b-initiator-other'),
+    symptoms: symptomsDisplay,
+    location: val('b-n-location'), narrative,
+    removed: val('b-removed'), returned: val('b-returned'),
+    timing: val('b-timing'), timingReason: val('b-timing-reason'),
+    video: val('b-video'), videoLink: val('b-video-link'),
+  };
+
+  const initiator = fields.initiator === 'Other' ? 'Other — ' + fields.initiatorOther : fields.initiator;
+
+  const output =
+`RUGBY CANADA
+BLUE CARD REPORT — Concussion Recognition (Recognize and Remove)
+
+Fixture: ${match.date || ''} ${match.teamA} v ${match.teamB} at time ${match.time || ''}
+Competition: ${match.competition || ''}
+Official: ${settings.official || ''} (Referee)
+Referee Phone Number: ${settings.phone || ''}
+Referee Provincial Union: ${settings.union || ''}
+Submission Timing: ${fields.timing}
+${fields.timing === 'After 48hrs' ? 'Reason for submission after 48hrs: ' + fields.timingReason + '\n' : ''}
+Player: ${fields.playerName}
+Team: ${fields.playerTeam}   Jersey Number: ${fields.playerNumber}
+Player Provincial Union: ${fields.playerUnion}
+Period: ${fields.period}   Elapsed time in period: ${fields.elapsed}
+Score at the time (player's team first): ${fields.scoreFor} - ${fields.scoreAgainst}
+
+Who initiated the blue card?: ${initiator}
+Signs or symptoms observed: ${fields.symptoms}
+
+Description of the incident:
+${fields.location ? fields.location + ' - ' : ''}${narrative}
+
+Was the player removed from the field immediately?: ${fields.removed}
+Did the player return to play in this match?: ${fields.returned}${fields.returned === 'Yes' ? '  [FLAGGED — should not return under recognize-and-remove protocol]' : ''}
+
+Is a video available showing the incident?: ${fields.video}
+${fields.video === 'Yes' ? 'Video link / access details: ' + fields.videoLink : ''}`;
+
+  const player = { name: fields.playerName, number: fields.playerNumber, team: fields.playerTeam, union: fields.playerUnion };
+  const wasEditing = !!editingCardId;
+  commitCard(match, 'blue', player, fields, 'Concussion', output);
+  if (!wasEditing) DB.saveMatchContext(match.id, { period: fields.period, scoreFor: fields.scoreFor, scoreAgainst: fields.scoreAgainst, team: fields.playerTeam });
+}
+
+function slugify(str) {
+  return (str || 'report').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
+
+function downloadOutput() {
+  const text = document.getElementById('output-text').textContent;
+  const c = currentOutputCard;
+  const match = (c && DB.matches().find(m => m.id === c.matchId)) || getCurrentMatch();
+  const datePart = (match && match.date) || new Date().toISOString().slice(0, 10);
+  const type = (c && c.type) || 'card';
+  const name = (c && c.player && c.player.name) || 'report';
+  const filename = `${type}-card-${slugify(name)}-${datePart}.txt`;
+
+  const blob = new Blob([text], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ---------- PDF ----------
+const CARD_COLORS = {
+  yellow: { r: 0.706, g: 0.325, b: 0.035, label: 'YELLOW CARD REPORT', sub: "Player caution report — Rugby Canada" },
+  red:    { r: 0.725, g: 0.114, b: 0.114, label: 'RED CARD REPORT',    sub: 'Send-off report' },
+  blue:   { r: 0.114, g: 0.306, b: 0.847, label: 'BLUE CARD REPORT',   sub: 'Concussion recognition report' },
+};
+
+async function buildYellowPdf(fields, match, settings) {
+  const { PDFDocument, StandardFonts, rgb } = PDFLib;
+  const doc = await PDFDocument.create();
+  const page = doc.addPage([612, 792]); // US Letter
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const bold = await doc.embedFont(StandardFonts.HelveticaBold);
+  const { width, height } = page.getSize();
+  const margin = 48;
+  const colWidth = (width - margin * 2) / 2;
+  const c = CARD_COLORS.yellow;
+  const accent = rgb(c.r, c.g, c.b);
+  const gray = rgb(0.45, 0.45, 0.45);
+  const ink = rgb(0.1, 0.1, 0.1);
+  const line = rgb(0.87, 0.87, 0.87);
+
+  let y = height;
+
+  // Header band
+  page.drawRectangle({ x: 0, y: height - 84, width, height: 84, color: accent });
+  page.drawText(c.label, { x: margin, y: height - 42, size: 19, font: bold, color: rgb(1, 1, 1) });
+  page.drawText(c.sub, { x: margin, y: height - 62, size: 10.5, font, color: rgb(1, 1, 1) });
+  y = height - 84 - 26;
+
+  function wrap(text, size, maxWidth, useFont) {
+    const words = (text || '').split(/\s+/).filter(Boolean);
+    const lines = [];
+    let cur = '';
+    for (const w of words) {
+      const test = cur ? cur + ' ' + w : w;
+      if (useFont.widthOfTextAtSize(test, size) > maxWidth && cur) {
+        lines.push(cur);
+        cur = w;
+      } else {
+        cur = test;
+      }
+    }
+    if (cur) lines.push(cur);
+    return lines.length ? lines : [''];
+  }
+  function label(x, yy, text) {
+    page.drawText(String(text || '').toUpperCase(), { x, y: yy, size: 7.5, font: bold, color: gray });
+  }
+  function value(x, yy, text, size) {
+    page.drawText(String(text || '—'), { x, y: yy, size: size || 10.5, font, color: ink });
+  }
+  function sectionHeader(title) {
+    y -= 6;
+    page.drawText(title.toUpperCase(), { x: margin, y, size: 9.5, font: bold, color: accent });
+    y -= 8;
+    page.drawLine({ start: { x: margin, y }, end: { x: width - margin, y }, thickness: 0.75, color: line });
+    y -= 18;
+  }
+  function fieldGrid(pairs) {
+    const rowH = 32;
+    const startY = y;
+    pairs.forEach((p, i) => {
+      const col = i % 2, rowIdx = Math.floor(i / 2);
+      const x = margin + col * colWidth;
+      const yy = startY - rowIdx * rowH;
+      label(x, yy, p[0]);
+      value(x, yy - 13, p[1]);
+    });
+    y = startY - Math.ceil(pairs.length / 2) * rowH - 4;
+  }
+  function wrappedBlock(text, size) {
+    const lines = wrap(text, size, width - margin * 2, font);
+    lines.forEach((ln, i) => value(margin, y - i * (size + 3.5), ln, size));
+    y -= lines.length * (size + 3.5) + 12;
+  }
+
+  // Fixture meta
+  label(margin, y, 'Fixture');
+  value(margin, y - 13, `${match.teamA} v ${match.teamB}`, 12);
+  label(margin + colWidth, y, 'Date / time');
+  value(margin + colWidth, y - 13, `${match.date || ''}  ${match.time || ''}`);
+  y -= 32;
+  label(margin, y, 'Competition');
+  value(margin, y - 13, match.competition || '');
+  label(margin + colWidth, y, 'Official');
+  value(margin + colWidth, y - 13, `${settings.official || ''}  ·  ${settings.union || ''}  ·  ${settings.phone || ''}`, 9.5);
+  y -= 30;
+
+  sectionHeader('Player');
+  fieldGrid([
+    ['Player', fields.playerName],
+    ['Jersey #', fields.playerNumber],
+    ['Team', fields.playerTeam],
+    ['Union', fields.playerUnion],
+  ]);
+
+  sectionHeader('Incident');
+  fieldGrid([
+    ['Period', fields.period],
+    ['Elapsed time', fields.elapsed],
+    [`Score (${fields.playerTeam || 'player\u2019s team'} first)`, `${fields.scoreFor || ''} - ${fields.scoreAgainst || ''}`],
+    ['Proximity (m)', fields.proximity],
+  ]);
+  label(margin, y, 'Law');
+  y -= 13;
+  wrappedBlock(fields.law, 9.5);
+
+  sectionHeader('Assessment');
+  fieldGrid([
+    ['Warning — player', fields.warnPlayer],
+    ['Warning — team', fields.warnTeam],
+    ['Head / neck contact', fields.headContact],
+    ['Degree of danger', fields.danger],
+    ['Mitigation reason', fields.mitigationReason],
+    ['Mitigation applied', fields.mitigationApplied],
+  ]);
+
+  sectionHeader('Incident description');
+  const narrativeText = (fields.location ? fields.location + ' — ' : '') + fields.narrative;
+  wrappedBlock(narrativeText, 10);
+
+  sectionHeader('Submission');
+  fieldGrid([
+    ['Timing', fields.timing],
+    ['Video available', fields.video],
+  ]);
+  if (fields.video === 'Yes' && fields.videoLink) {
+    label(margin, y, 'Video link');
+    value(margin, y - 13, fields.videoLink, 9.5);
+    y -= 26;
+  }
+
+  page.drawText(`Generated ${new Date().toLocaleString()}`, { x: margin, y: 28, size: 7.5, font, color: gray });
+
+  return doc.save();
+}
+
+async function buildRedPdf(fields, match, settings, role) {
+  const { PDFDocument, StandardFonts, rgb } = PDFLib;
+  const doc = await PDFDocument.create();
+  let page = doc.addPage([612, 792]);
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const bold = await doc.embedFont(StandardFonts.HelveticaBold);
+  const { width, height } = page.getSize();
+  const margin = 48;
+  const colWidth = (width - margin * 2) / 2;
+  const c = CARD_COLORS.red;
+  const accent = rgb(c.r, c.g, c.b);
+  const gray = rgb(0.45, 0.45, 0.45);
+  const ink = rgb(0.1, 0.1, 0.1);
+  const line = rgb(0.87, 0.87, 0.87);
+  const isReferee = role !== 'ar';
+
+  let y = height;
+
+  function newPageIfNeeded(need) {
+    if (y - need < 50) {
+      page = doc.addPage([612, 792]);
+      y = height - 40;
+    }
+  }
+  function drawHeader() {
+    page.drawRectangle({ x: 0, y: height - 84, width, height: 84, color: accent });
+    page.drawText(c.label, { x: margin, y: height - 42, size: 19, font: bold, color: rgb(1, 1, 1) });
+    page.drawText(isReferee ? "Referee's report" : "Assistant referee's report", { x: margin, y: height - 62, size: 10.5, font, color: rgb(1, 1, 1) });
+  }
+  drawHeader();
+  y = height - 84 - 26;
+
+  function wrap(text, size, maxWidth, useFont) {
+    const words = (text || '').split(/\s+/).filter(Boolean);
+    const lines = [];
+    let cur = '';
+    for (const w of words) {
+      const test = cur ? cur + ' ' + w : w;
+      if (useFont.widthOfTextAtSize(test, size) > maxWidth && cur) { lines.push(cur); cur = w; }
+      else cur = test;
+    }
+    if (cur) lines.push(cur);
+    return lines.length ? lines : [''];
+  }
+  function label(x, yy, text) { page.drawText(String(text || '').toUpperCase(), { x, y: yy, size: 7.5, font: bold, color: gray }); }
+  function value(x, yy, text, size) { page.drawText(String(text || '—'), { x, y: yy, size: size || 10.5, font, color: ink }); }
+  function sectionHeader(title) {
+    newPageIfNeeded(50);
+    y -= 6;
+    page.drawText(title.toUpperCase(), { x: margin, y, size: 9.5, font: bold, color: accent });
+    y -= 8;
+    page.drawLine({ start: { x: margin, y }, end: { x: width - margin, y }, thickness: 0.75, color: line });
+    y -= 18;
+  }
+  function fieldGrid(pairs) {
+    newPageIfNeeded(Math.ceil(pairs.length / 2) * 32);
+    const rowH = 32;
+    const startY = y;
+    pairs.forEach((p, i) => {
+      const col = i % 2, rowIdx = Math.floor(i / 2);
+      const x = margin + col * colWidth;
+      const yy = startY - rowIdx * rowH;
+      label(x, yy, p[0]);
+      value(x, yy - 13, p[1]);
+    });
+    y = startY - Math.ceil(pairs.length / 2) * rowH - 4;
+  }
+  function wrappedBlock(text, size) {
+    const lines = wrap(text, size, width - margin * 2, font);
+    newPageIfNeeded(lines.length * (size + 3.5) + 12);
+    lines.forEach((ln, i) => value(margin, y - i * (size + 3.5), ln, size));
+    y -= lines.length * (size + 3.5) + 12;
+  }
+
+  label(margin, y, 'Fixture'); value(margin, y - 13, `${match.teamA} v ${match.teamB}`, 12);
+  label(margin + colWidth, y, 'Date / venue'); value(margin + colWidth, y - 13, `${match.date || ''}  ${match.venue || ''}`, 9.5);
+  y -= 32;
+  label(margin, y, 'Competition / division'); value(margin, y - 13, match.competition || '');
+  label(margin + colWidth, y, 'Submitted by'); value(margin + colWidth, y - 13, `${settings.official || ''}  ·  ${settings.union || ''}`, 9.5);
+  y -= 30;
+
+  sectionHeader('Player');
+  fieldGrid([
+    ['Player', fields.playerName], ['Number', fields.playerNumber],
+    ['Team', fields.playerTeam], ['Position', fields.playerPosition],
+  ]);
+
+  sectionHeader('Incident');
+  fieldGrid([
+    ['Half', fields.half], ['Elapsed time', fields.elapsed],
+    [`Score at incident (${fields.playerTeam || 'player\u2019s team'} first)`, `${fields.scoreFor || ''} - ${fields.scoreAgainst || ''}`],
+    ['Final score', `${fields.finalFor || ''} - ${fields.finalAgainst || ''}`],
+    ['Proximity to incident (m)', fields.proximity], ['Ball position', fields.ballPosition],
+    ['Other players carded', fields.otherCarded], ['', fields.otherCarded === 'Yes' ? fields.otherCardedDetail : ''],
+  ]);
+
+  if (isReferee) {
+    sectionHeader('Prior discipline');
+    fieldGrid([
+      ['Previous caution', fields.priorCaution === 'Yes' ? `Yes (${fields.priorCautionType})` : 'No'],
+      ['Warned earlier', fields.warnedEarlier],
+      ['Sin-binned earlier', fields.sinbinnedEarlier], ['', ''],
+    ]);
+  }
+
+  sectionHeader('Law infringed');
+  wrappedBlock(fields.law, 9.5);
+
+  sectionHeader('Context');
+  label(margin, y, 'Provocation observed'); y -= 13;
+  wrappedBlock(fields.provocation || '—', 10);
+  if (isReferee) {
+    label(margin, y, "Player's reaction"); y -= 13;
+    wrappedBlock(fields.reaction || '—', 10);
+    label(margin, y, 'Injury details'); y -= 13;
+    wrappedBlock(fields.injury || '—', 10);
+    fieldGrid([['Based on AR report', fields.basedOnAr === 'Yes' ? `Yes (${fields.arName})` : 'No']]);
+  } else {
+    fieldGrid([['Referee also reporting', fields.refereeName || '—']]);
+  }
+
+  sectionHeader('Incident description');
+  const narrativeText = (fields.location ? fields.location + ' — ' : '') + fields.narrative;
+  wrappedBlock(narrativeText, 10);
+
+  sectionHeader('Submission');
+  fieldGrid([['Timing', fields.timing], ['Video available', fields.video]]);
+  if (fields.video === 'Yes' && fields.videoLink) {
+    label(margin, y, 'Video link'); value(margin, y - 13, fields.videoLink, 9.5); y -= 26;
+  }
+  fieldGrid([
+    ['Submitted by', fields.subName], ['Signature', fields.subSignature],
+    ['Contact', fields.subContact], ['Date', fields.subDate],
+  ]);
+
+  page.drawText(`Generated ${new Date().toLocaleString()}`, { x: margin, y: 28, size: 7.5, font, color: gray });
+  return doc.save();
+}
+
+async function buildBluePdf(fields, match, settings) {
+  const { PDFDocument, StandardFonts, rgb } = PDFLib;
+  const doc = await PDFDocument.create();
+  const page = doc.addPage([612, 792]);
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const bold = await doc.embedFont(StandardFonts.HelveticaBold);
+  const { width, height } = page.getSize();
+  const margin = 48;
+  const colWidth = (width - margin * 2) / 2;
+  const c = CARD_COLORS.blue;
+  const accent = rgb(c.r, c.g, c.b);
+  const gray = rgb(0.45, 0.45, 0.45);
+  const ink = rgb(0.1, 0.1, 0.1);
+  const line = rgb(0.87, 0.87, 0.87);
+
+  let y = height;
+  page.drawRectangle({ x: 0, y: height - 84, width, height: 84, color: accent });
+  page.drawText(c.label, { x: margin, y: height - 42, size: 19, font: bold, color: rgb(1, 1, 1) });
+  page.drawText(c.sub, { x: margin, y: height - 62, size: 10.5, font, color: rgb(1, 1, 1) });
+  y = height - 84 - 26;
+
+  function wrap(text, size, maxWidth, useFont) {
+    const words = (text || '').split(/\s+/).filter(Boolean);
+    const lines = [];
+    let cur = '';
+    for (const w of words) {
+      const test = cur ? cur + ' ' + w : w;
+      if (useFont.widthOfTextAtSize(test, size) > maxWidth && cur) { lines.push(cur); cur = w; }
+      else cur = test;
+    }
+    if (cur) lines.push(cur);
+    return lines.length ? lines : [''];
+  }
+  function label(x, yy, text) { page.drawText(String(text || '').toUpperCase(), { x, y: yy, size: 7.5, font: bold, color: gray }); }
+  function value(x, yy, text, size) { page.drawText(String(text || '—'), { x, y: yy, size: size || 10.5, font, color: ink }); }
+  function sectionHeader(title) {
+    y -= 6;
+    page.drawText(title.toUpperCase(), { x: margin, y, size: 9.5, font: bold, color: accent });
+    y -= 8;
+    page.drawLine({ start: { x: margin, y }, end: { x: width - margin, y }, thickness: 0.75, color: line });
+    y -= 18;
+  }
+  function fieldGrid(pairs) {
+    const rowH = 32;
+    const startY = y;
+    pairs.forEach((p, i) => {
+      const col = i % 2, rowIdx = Math.floor(i / 2);
+      const x = margin + col * colWidth;
+      const yy = startY - rowIdx * rowH;
+      label(x, yy, p[0]);
+      value(x, yy - 13, p[1]);
+    });
+    y = startY - Math.ceil(pairs.length / 2) * rowH - 4;
+  }
+  function wrappedBlock(text, size) {
+    const lines = wrap(text, size, width - margin * 2, font);
+    lines.forEach((ln, i) => value(margin, y - i * (size + 3.5), ln, size));
+    y -= lines.length * (size + 3.5) + 12;
+  }
+
+  label(margin, y, 'Fixture'); value(margin, y - 13, `${match.teamA} v ${match.teamB}`, 12);
+  label(margin + colWidth, y, 'Date / time'); value(margin + colWidth, y - 13, `${match.date || ''}  ${match.time || ''}`);
+  y -= 32;
+  label(margin, y, 'Competition'); value(margin, y - 13, match.competition || '');
+  label(margin + colWidth, y, 'Official'); value(margin + colWidth, y - 13, `${settings.official || ''}  ·  ${settings.union || ''}  ·  ${settings.phone || ''}`, 9.5);
+  y -= 30;
+
+  sectionHeader('Player');
+  fieldGrid([
+    ['Player', fields.playerName], ['Jersey #', fields.playerNumber],
+    ['Team', fields.playerTeam], ['Union', fields.playerUnion],
+  ]);
+
+  sectionHeader('Incident');
+  fieldGrid([
+    ['Period', fields.period], ['Elapsed time', fields.elapsed],
+    [`Score (${fields.playerTeam || 'player\u2019s team'} first)`, `${fields.scoreFor || ''} - ${fields.scoreAgainst || ''}`],
+    ['Initiated by', fields.initiator === 'Other' ? 'Other — ' + fields.initiatorOther : fields.initiator],
+  ]);
+
+  sectionHeader('Signs and symptoms observed');
+  wrappedBlock(fields.symptoms, 10);
+
+  sectionHeader('Incident description');
+  const narrativeText = (fields.location ? fields.location + ' — ' : '') + fields.narrative;
+  wrappedBlock(narrativeText, 10);
+
+  sectionHeader('Removal and return to play');
+  fieldGrid([
+    ['Removed immediately', fields.removed],
+    ['Returned to play this match', fields.returned + (fields.returned === 'Yes' ? '  (flagged)' : '')],
+  ]);
+
+  sectionHeader('Submission');
+  fieldGrid([['Timing', fields.timing], ['Video available', fields.video]]);
+  if (fields.video === 'Yes' && fields.videoLink) {
+    label(margin, y, 'Video link'); value(margin, y - 13, fields.videoLink, 9.5); y -= 26;
+  }
+
+  page.drawText(`Generated ${new Date().toLocaleString()}`, { x: margin, y: 28, size: 7.5, font, color: gray });
+  return doc.save();
+}
+
+async function buildPdfForCurrentCard() {
+  const c = currentOutputCard;
+  if (!c) return null;
+  const match = DB.matches().find(m => m.id === c.matchId) || getCurrentMatch();
+  const settings = DB.settings();
+  if (c.type === 'yellow') return buildYellowPdf(c.fields, match, settings);
+  if (c.type === 'red') return buildRedPdf(c.fields, match, settings, c.role);
+  if (c.type === 'blue') return buildBluePdf(c.fields, match, settings);
+  return null;
+}
+
+function pdfFilenameForCurrentCard() {
+  const c = currentOutputCard;
+  if (!c) return 'report.pdf';
+  return `${c.type}-card-${slugify(c.player.name)}-${(DB.matches().find(m => m.id === c.matchId) || {}).date || 'report'}.pdf`;
+}
+
+async function downloadPdf() {
+  const c = currentOutputCard;
+  if (!c) return;
+  const btn = document.getElementById('pdf-btn');
+  const original = btn.textContent;
+  btn.textContent = 'Building PDF…';
+  try {
+    const bytes = await buildPdfForCurrentCard();
+    if (!bytes) { alert('PDF export for this card type lands in a later stage.'); return; }
+    const blob = new Blob([bytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = pdfFilenameForCurrentCard();
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error(err);
+    alert('Could not build the PDF — see console for details.');
+  } finally {
+    btn.textContent = original;
+  }
+}
+
+async function sharePdf() {
+  const c = currentOutputCard;
+  if (!c) return;
+  const btn = document.getElementById('share-btn');
+  const original = btn.innerHTML;
+  btn.textContent = 'Preparing…';
+  try {
+    const bytes = await buildPdfForCurrentCard();
+    if (!bytes) { alert('Sharing for this card type lands in a later stage.'); return; }
+    const filename = pdfFilenameForCurrentCard();
+    const file = new File([bytes], filename, { type: 'application/pdf' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: filename });
+    } else if (navigator.share) {
+      await navigator.share({ title: filename, text: document.getElementById('output-text').textContent });
+    } else {
+      alert('Sharing isn\'t supported in this browser — use Download PDF instead.');
+    }
+  } catch (err) {
+    if (err && err.name !== 'AbortError') { console.error(err); alert('Could not share — see console for details.'); }
+  } finally {
+    btn.innerHTML = original;
+  }
+}
+
+function updateShareButtonVisibility() {
+  const btn = document.getElementById('share-btn');
+  if (btn) btn.style.display = navigator.share ? '' : 'none';
+}
+
+function copyOutput() {
+  const text = document.getElementById('output-text').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    const original = btn.textContent;
+    btn.textContent = 'Copied';
+    setTimeout(() => btn.textContent = original, 1500);
+  });
+}
+
+// ---------- Offline / install ----------
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(err => console.warn('Service worker registration failed:', err));
+  });
+}
+
+// ---------- Init ----------
+renderHome();
+</script>
+
+</body>
+</html>
