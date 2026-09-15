@@ -180,6 +180,22 @@
   }
   .field-error { font-size: 11.5px; color: var(--red); margin: -3px 0 2px; display: none; }
   .field-error.show { display: block; }
+  .player-history { font-size: 11.5px; color: var(--amber); font-weight: 600; margin: -2px 0 2px; min-height: 1px; }
+  .search-box { position: relative; margin-bottom: 4px; }
+  .search-box input { padding-left: 14px; }
+  body.high-contrast { --ink: #000000; --muted: #000000; --faint: #333333; --line: #000000; --paper: #ffffff; --card: #ffffff; --accent-bg: #d6f0ec; }
+  body.high-contrast .card { border-width: 2px; box-shadow: none; }
+  body.high-contrast input, body.high-contrast select, body.high-contrast textarea { border-width: 2.5px; font-size: 16px; }
+  body.high-contrast .btn { border-width: 2.5px; font-size: 15.5px; }
+  body.high-contrast label { font-size: 13.5px; font-weight: 700; }
+  body.high-contrast h1 { font-size: 23px; }
+  body.high-contrast pre.output { font-size: 14px; border-width: 2px; }
+  body.high-contrast .fieldnote, body.high-contrast .sub, body.high-contrast .sub2 { color: #000; }
+  @media print {
+    .topbar, .backlink, .btn, input[type="file"] { display: none !important; }
+    body, .app { background: #fff; padding: 0; margin: 0; }
+    pre.output { border: none; padding: 0; background: #fff; }
+  }
 </style>
 </head>
 <body>
@@ -207,6 +223,8 @@
       <div><label>Phone</label><input id="set-phone" placeholder="555 555 5555"></div>
       <div><label>Provincial union</label><input id="set-union" placeholder="Alberta"></div>
     </div>
+    <label>Outdoor / high-contrast mode</label>
+    <select id="set-contrast"><option value="off">Off</option><option value="on">On — bigger text, higher contrast</option></select>
     <button class="btn btn-block" onclick="saveSettings()"><i class="ti ti-device-floppy"></i>Save settings</button>
   </div>
 
@@ -221,6 +239,8 @@
     <h2>Season log</h2>
     <p class="sub" style="margin-bottom:10px;">Every match — past or upcoming — stays saved. Switching matches never clears anything.</p>
     <button class="btn btn-block" onclick="showScreen('match-history')"><i class="ti ti-history"></i>View all matches</button>
+    <button class="btn btn-block" onclick="showScreen('search')"><i class="ti ti-search"></i>Search all cards</button>
+    <button class="btn btn-block" id="season-summary-btn" onclick="exportSeasonSummary()"><i class="ti ti-report"></i>Export season summary (PDF)</button>
     <div class="row2" style="margin-top:10px;">
       <button class="btn" onclick="exportBackup()"><i class="ti ti-download"></i>Export backup</button>
       <button class="btn" onclick="document.getElementById('import-file').click()"><i class="ti ti-upload"></i>Import backup</button>
@@ -283,7 +303,7 @@
   <div class="card">
     <h2>Player</h2>
     <div class="row2">
-      <div><label>Player name</label><input id="y-name" placeholder="First Last"></div>
+      <div><label>Player name</label><input id="y-name" list="y-roster" placeholder="First Last"><datalist id="y-roster"></datalist><p class="player-history" id="y-player-history"></p></div>
       <div><label>Jersey #</label><input id="y-number"></div>
     </div>
     <label>Player's team</label>
@@ -303,7 +323,8 @@
       <div><label>&nbsp;</label><input id="y-score-against" type="number" placeholder="19"></div>
     </div>
     <label>Law</label>
-    <select id="y-law"></select>
+    <p class="fieldnote">Select all that apply.</p>
+    <div class="checklist" id="y-law-checklist"></div>
     <div class="conditional" id="y-law-other-wrap"><label>Other — details</label><input id="y-law-other"></div>
     <label>Proximity (metres)</label>
     <input id="y-proximity" type="number">
@@ -377,7 +398,7 @@
   <div class="card">
     <h2>Player</h2>
     <div class="row2">
-      <div><label>Player name</label><input id="r-name" placeholder="First Last"></div>
+      <div><label>Player name</label><input id="r-name" list="r-roster" placeholder="First Last"><datalist id="r-roster"></datalist><p class="player-history" id="r-player-history"></p></div>
       <div><label>Jersey #</label><input id="r-number"></div>
     </div>
     <div class="row2">
@@ -494,7 +515,7 @@
   <div class="card">
     <h2>Player</h2>
     <div class="row2">
-      <div><label>Player name</label><input id="b-name" placeholder="First Last"></div>
+      <div><label>Player name</label><input id="b-name" list="b-roster" placeholder="First Last"><datalist id="b-roster"></datalist><p class="player-history" id="b-player-history"></p></div>
       <div><label>Jersey #</label><input id="b-number"></div>
     </div>
     <label>Player's team</label>
@@ -560,6 +581,20 @@
   <button class="btn btn-primary" onclick="generateBlue()"><i class="ti ti-file-check"></i>Generate report</button>
 </div>
 
+<div id="screen-search" class="screen">
+  <a class="backlink" onclick="showScreen('home')"><i class="ti ti-chevron-left"></i>Back</a>
+  <h1>Search all cards</h1>
+  <p class="sub">Search by player or team name across every match you've logged.</p>
+  <div class="card">
+    <div class="search-box">
+      <input id="search-query" placeholder="Player or team name" oninput="runSearch()">
+    </div>
+    <div id="search-results">
+      <div class="empty">Type a player or team name to search across every match.</div>
+    </div>
+  </div>
+</div>
+
 <div id="screen-match-history" class="screen">
   <a class="backlink" onclick="showScreen('home')"><i class="ti ti-chevron-left"></i>Back</a>
   <h1>Past matches</h1>
@@ -594,10 +629,13 @@
     <button class="btn" onclick="copyOutput()" id="copy-btn"><i class="ti ti-copy"></i>Copy text</button>
   </div>
   <div class="row2" style="margin-top:10px;">
+    <button class="btn" onclick="window.print()"><i class="ti ti-printer"></i>Print</button>
     <button class="btn" onclick="downloadOutput()"><i class="ti ti-file-text"></i>Download .txt</button>
-    <button class="btn" onclick="editCurrentCard()"><i class="ti ti-pencil"></i>Edit report</button>
   </div>
-  <button class="btn btn-danger btn-block" onclick="deleteCurrentCard()"><i class="ti ti-trash"></i>Delete report</button>
+  <div class="row2" style="margin-top:10px;">
+    <button class="btn" onclick="editCurrentCard()"><i class="ti ti-pencil"></i>Edit report</button>
+    <button class="btn btn-danger" onclick="deleteCurrentCard()"><i class="ti ti-trash"></i>Delete report</button>
+  </div>
 </div>
 
 </div><!-- /.app -->
@@ -616,6 +654,8 @@ const DB = {
   setCurrentMatchId: (id) => localStorage.setItem('moa_current_match', id),
   matchContext: (matchId) => { try { return JSON.parse(localStorage.getItem('moa_ctx_' + matchId) || 'null'); } catch (e) { return null; } },
   saveMatchContext: (matchId, ctx) => localStorage.setItem('moa_ctx_' + matchId, JSON.stringify(ctx)),
+  rosters: () => { try { return JSON.parse(localStorage.getItem('moa_rosters') || '{}'); } catch (e) { return {}; } },
+  saveRosters: (r) => localStorage.setItem('moa_rosters', JSON.stringify(r)),
 };
 
 // ---------- Validation ----------
@@ -708,6 +748,128 @@ const SYMPTOMS = [
   "Slow to get up",
 ];
 
+// ---------- Team rosters (autocomplete + jersey number memory) ----------
+function upsertRosterEntry(team, name, number) {
+  if (!team || !name) return;
+  const rosters = DB.rosters();
+  const key = team.trim();
+  if (!key) return;
+  if (!rosters[key]) rosters[key] = [];
+  const idx = rosters[key].findIndex(p => p.name.toLowerCase() === name.trim().toLowerCase());
+  const entry = { name: name.trim(), number: (number || '').trim() };
+  if (idx !== -1) rosters[key][idx] = entry;
+  else rosters[key].push(entry);
+  DB.saveRosters(rosters);
+}
+function populateRosterDatalist(prefix, team) {
+  const dl = document.getElementById(prefix + '-roster');
+  if (!dl) return;
+  const rosters = DB.rosters();
+  const list = rosters[(team || '').trim()] || [];
+  dl.innerHTML = list.map(p => `<option value="${(p.name || '').replace(/"/g, '&quot;')}">`).join('');
+}
+
+// ---------- Prior-card lookup while filling a report ----------
+function playerHistoryText(name, excludeCardId) {
+  const norm = (name || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  if (!norm) return '';
+  const cards = DB.cards().filter(c => c.id !== excludeCardId && (c.player.name || '').trim().toLowerCase().replace(/\s+/g, ' ') === norm);
+  if (!cards.length) return '';
+  const counts = {};
+  cards.forEach(c => { counts[c.type] = (counts[c.type] || 0) + 1; });
+  const parts = [];
+  if (counts.yellow) parts.push(counts.yellow + ' yellow');
+  if (counts.red) parts.push(counts.red + ' red');
+  if (counts.blue) parts.push(counts.blue + ' blue');
+  return `${cards.length} prior card${cards.length === 1 ? '' : 's'} this season (${parts.join(', ')})`;
+}
+function updatePlayerHistory(prefix) {
+  const nameEl = document.getElementById(prefix + '-name');
+  const histEl = document.getElementById(prefix + '-player-history');
+  if (nameEl && histEl) histEl.textContent = playerHistoryText(nameEl.value, editingCardId);
+}
+
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'y-name' || e.target.id === 'r-name' || e.target.id === 'b-name') {
+    const prefix = e.target.id[0];
+    updatePlayerHistory(prefix);
+    const teamSel = document.getElementById(prefix + '-team');
+    const numberField = document.getElementById(prefix + '-number');
+    if (teamSel && numberField && !numberField.value) {
+      const rosters = DB.rosters();
+      const list = rosters[(teamSel.value || '').trim()] || [];
+      const match = list.find(p => p.name.toLowerCase() === e.target.value.trim().toLowerCase());
+      if (match) numberField.value = match.number || '';
+    }
+  }
+});
+document.addEventListener('change', (e) => {
+  if (e.target.id === 'y-team') populateRosterDatalist('y', e.target.value);
+  if (e.target.id === 'r-team') populateRosterDatalist('r', e.target.value);
+  if (e.target.id === 'b-team') populateRosterDatalist('b', e.target.value);
+});
+
+// ---------- Draft auto-save ----------
+const DRAFT_PREFIXES = { yellow: 'y', red: 'r', blue: 'b' };
+function draftKey(type) { return 'moa_draft_' + type; }
+function activeFormType() {
+  if (document.getElementById('screen-yellow-form').classList.contains('active')) return 'yellow';
+  if (document.getElementById('screen-red-form').classList.contains('active')) return 'red';
+  if (document.getElementById('screen-blue-form').classList.contains('active')) return 'blue';
+  return null;
+}
+function collectDraft(type) {
+  const prefix = DRAFT_PREFIXES[type];
+  const screen = document.getElementById('screen-' + type + '-form');
+  const values = {};
+  screen.querySelectorAll('input, select, textarea').forEach(el => {
+    if (!el.id || el.type === 'checkbox' || el.type === 'file') return;
+    values[el.id] = el.value;
+  });
+  const lawChecks = type !== 'blue' ? Array.from(screen.querySelectorAll('.' + prefix + '-law-check:checked')).map(el => el.value) : undefined;
+  const symptomChecks = type === 'blue' ? Array.from(screen.querySelectorAll('.b-symptom-check:checked')).map(el => el.value) : undefined;
+  const match = editingMatchId ? DB.matches().find(m => m.id === editingMatchId) : getCurrentMatch();
+  return {
+    matchId: match ? match.id : null,
+    role: type === 'red' ? currentRedRole : undefined,
+    savedAt: Date.now(),
+    values, lawChecks, symptomChecks,
+  };
+}
+function saveDraft(type) {
+  if (editingCardId) return; // don't shadow an in-progress edit of a saved report
+  try { localStorage.setItem(draftKey(type), JSON.stringify(collectDraft(type))); } catch (e) {}
+}
+function loadDraft(type) {
+  try { return JSON.parse(localStorage.getItem(draftKey(type)) || 'null'); } catch (e) { return null; }
+}
+function clearDraft(type) { localStorage.removeItem(draftKey(type)); }
+function applyDraft(type, draft) {
+  const prefix = DRAFT_PREFIXES[type];
+  Object.keys(draft.values || {}).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = draft.values[id];
+  });
+  if (draft.lawChecks) {
+    document.querySelectorAll('.' + prefix + '-law-check').forEach(cb => { cb.checked = draft.lawChecks.includes(cb.value); });
+    document.getElementById(prefix + '-law-other-wrap').classList.toggle('show', document.getElementById(prefix + '-law-other-check').checked);
+  }
+  if (type === 'blue' && draft.symptomChecks) {
+    document.querySelectorAll('.b-symptom-check').forEach(cb => { cb.checked = draft.symptomChecks.includes(cb.value); });
+    document.getElementById('b-symptom-other-wrap').classList.toggle('show', document.getElementById('b-symptom-other-check').checked);
+  }
+  updatePlayerHistory(prefix);
+}
+let draftSaveTimer = null;
+function scheduleDraftSave() {
+  const type = activeFormType();
+  if (!type) return;
+  clearTimeout(draftSaveTimer);
+  draftSaveTimer = setTimeout(() => saveDraft(type), 500);
+}
+document.addEventListener('input', scheduleDraftSave);
+document.addEventListener('change', scheduleDraftSave);
+
 // ---------- Navigation ----------
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -717,18 +879,25 @@ function showScreen(name) {
 }
 
 // ---------- Settings ----------
+function applyContrastMode() {
+  document.body.classList.toggle('high-contrast', DB.settings().highContrast === 'on');
+}
 function loadSettings() {
   const s = DB.settings();
   document.getElementById('set-official').value = s.official || '';
   document.getElementById('set-phone').value = s.phone || '';
   document.getElementById('set-union').value = s.union || '';
+  document.getElementById('set-contrast').value = s.highContrast === 'on' ? 'on' : 'off';
+  applyContrastMode();
 }
 function saveSettings() {
   DB.saveSettings({
     official: document.getElementById('set-official').value,
     phone: document.getElementById('set-phone').value,
     union: document.getElementById('set-union').value,
+    highContrast: document.getElementById('set-contrast').value,
   });
+  applyContrastMode();
 }
 
 // ---------- Match ----------
@@ -1005,11 +1174,11 @@ function importBackup(event) {
 let currentOutputCard = null;
 let currentOutputBackScreen = 'home';
 
-function viewCard(id) {
+function viewCard(id, fromScreen) {
   const c = DB.cards().find(x => x.id === id);
   if (!c) return;
   currentOutputCard = c;
-  currentOutputBackScreen = document.getElementById('screen-match-detail').classList.contains('active') ? 'match-detail' : 'home';
+  currentOutputBackScreen = fromScreen || (document.getElementById('screen-match-detail').classList.contains('active') ? 'match-detail' : 'home');
   document.getElementById('output-text').textContent = c.outputText;
   updateShareButtonVisibility();
   showScreen('output');
@@ -1018,9 +1187,50 @@ function viewCard(id) {
 function backFromOutput() {
   if (currentOutputBackScreen === 'match-detail' && viewingMatchId) {
     viewMatchDetail(viewingMatchId);
+  } else if (currentOutputBackScreen === 'search') {
+    showScreen('search');
   } else {
     showScreen('home');
   }
+}
+
+// ---------- Global search ----------
+function runSearch() {
+  const q = document.getElementById('search-query').value.trim().toLowerCase();
+  const resultsEl = document.getElementById('search-results');
+  if (!q) {
+    resultsEl.innerHTML = '<div class="empty">Type a player or team name to search across every match.</div>';
+    return;
+  }
+  const matches = DB.matches();
+  const matchById = {};
+  matches.forEach(m => { matchById[m.id] = m; });
+  const cards = DB.cards().filter(c =>
+    (c.player.name || '').toLowerCase().includes(q) || (c.player.team || '').toLowerCase().includes(q)
+  );
+  if (!cards.length) {
+    resultsEl.innerHTML = `<div class="empty">No cards match "${q.replace(/</g, '&lt;')}".</div>`;
+    return;
+  }
+  cards.sort((a, b) => {
+    const ma = matchById[a.matchId], mb = matchById[b.matchId];
+    return ((mb && mb.date) || '').localeCompare((ma && ma.date) || '');
+  });
+  resultsEl.innerHTML = cards.map(c => {
+    const m = matchById[c.matchId];
+    let typeLabel = c.type[0].toUpperCase() + c.type.slice(1);
+    if (c.type === 'red') typeLabel += c.role === 'ar' ? ' (AR)' : ' (Referee)';
+    const matchLabel = m ? `${m.teamA} v ${m.teamB} &middot; ${m.date || ''}` : '(match deleted)';
+    return `
+    <div class="card-row" onclick="viewCard('${c.id}', 'search')">
+      <div class="tag ${c.type}"><i class="ti ${CARD_ICONS[c.type] || 'ti-square-rounded-filled'}"></i></div>
+      <div class="meta">
+        <p class="name">${c.player.name || '(no name)'} <span style="color:var(--muted); font-weight:400;">#${c.player.number || ''}</span></p>
+        <p class="sub2">${typeLabel} &middot; ${matchLabel}</p>
+      </div>
+      <i class="ti ti-chevron-right"></i>
+    </div>`;
+  }).join('');
 }
 
 // ---------- Add card flow ----------
@@ -1028,6 +1238,9 @@ let editingCardId = null;
 let editingMatchId = null;
 
 function cancelForm() {
+  const wasEditing = !!editingCardId;
+  const type = activeFormType();
+  if (!wasEditing && type) clearDraft(type);
   const returnTo = editingMatchId;
   editingCardId = null;
   editingMatchId = null;
@@ -1102,8 +1315,17 @@ function prepYellowForm(existing) {
   document.getElementById('yellow-form-title').textContent = existing ? 'Edit yellow card report' : 'Yellow card report';
   const teamSel = document.getElementById('y-team');
   teamSel.innerHTML = `<option value="${match.teamA}">${match.teamA}</option><option value="${match.teamB}">${match.teamB}</option>`;
-  const lawSel = document.getElementById('y-law');
-  lawSel.innerHTML = LAWS.map(l => `<option value="${l.replace(/"/g,'&quot;')}">${l}</option>`).join('');
+
+  const checklist = document.getElementById('y-law-checklist');
+  checklist.innerHTML = LAW_ITEMS.map((item) => `
+    <label class="check-row">
+      <input type="checkbox" class="y-law-check" value="${item.code}">
+      <span class="clabel"><span class="code">${item.code}</span><span class="ctext">${item.text}</span></span>
+    </label>`).join('') + `
+    <label class="check-row">
+      <input type="checkbox" id="y-law-other-check" class="y-law-check" value="Other">
+      <span class="clabel"><span class="code">Other</span></span>
+    </label>`;
 
   if (existing) {
     document.getElementById('y-name').value = existing.playerName || '';
@@ -1126,9 +1348,14 @@ function prepYellowForm(existing) {
     document.getElementById('y-timing-reason').value = existing.timingReason || '';
     document.getElementById('y-video').value = existing.video || 'No';
     document.getElementById('y-video-link').value = existing.videoLink || '';
-    const isOther = (existing.law || '').startsWith('Other');
-    document.getElementById('y-law').value = isOther ? 'Other' : (existing.law || LAWS[0]);
-    document.getElementById('y-law-other').value = isOther ? (existing.law || '').replace(/^Other\s*—\s*/, '') : '';
+    document.getElementById('y-law-other').value = '';
+    // re-check the previously selected law codes
+    const selected = (existing.law || '').split(/[,;]/).map(s => s.trim().split(' ')[0]);
+    document.querySelectorAll('.y-law-check').forEach(cb => { cb.checked = selected.includes(cb.value); });
+    if ((existing.law || '').includes('Other —')) {
+      document.getElementById('y-law-other-check').checked = true;
+      document.getElementById('y-law-other').value = (existing.law.match(/Other\s*—\s*(.*)$/) || [,''])[1];
+    }
     // narrative fields were concatenated on generate — leave the sub-fields blank on edit and
     // put the full stored narrative back into the "action" box so nothing is lost
     document.getElementById('y-n-action').value = existing.narrative || '';
@@ -1153,19 +1380,26 @@ function prepYellowForm(existing) {
       document.getElementById('y-score-for').value = '';
       document.getElementById('y-score-against').value = '';
     }
+    const draft = loadDraft('yellow');
+    if (draft && draft.matchId === match.id) {
+      if (confirm('You have an unsaved yellow card draft for this match. Resume it?')) {
+        applyDraft('yellow', draft);
+      } else {
+        clearDraft('yellow');
+      }
+    }
   }
-  toggleLawOther();
+  populateRosterDatalist('y', document.getElementById('y-team').value);
+  updatePlayerHistory('y');
+  document.getElementById('y-law-other-wrap').classList.toggle('show', document.getElementById('y-law-other-check').checked);
   document.getElementById('y-timing-reason-wrap').classList.toggle('show', document.getElementById('y-timing').value === 'After 48hrs');
   document.getElementById('y-video-link-wrap').classList.toggle('show', document.getElementById('y-video').value === 'Yes');
 }
 
-document.getElementById('y-law') && document.getElementById('y-law').addEventListener('change', toggleLawOther);
-function toggleLawOther() {
-  const isOther = document.getElementById('y-law').value === 'Other';
-  document.getElementById('y-law-other-wrap').classList.toggle('show', isOther);
-}
 document.addEventListener('change', function(e) {
-  if (e.target.id === 'y-law') toggleLawOther();
+  if (e.target.id === 'y-law-other-check') {
+    document.getElementById('y-law-other-wrap').classList.toggle('show', e.target.checked);
+  }
   if (e.target.id === 'y-timing') {
     document.getElementById('y-timing-reason-wrap').classList.toggle('show', e.target.value === 'After 48hrs');
   }
@@ -1219,6 +1453,8 @@ function commitCard(match, type, player, fields, lawShort, output, extra) {
     cards.push(record);
   }
   DB.saveCards(cards);
+  upsertRosterEntry(player.team, player.name, player.number);
+  clearDraft(type);
   editingCardId = null;
   editingMatchId = null;
   currentOutputCard = record;
@@ -1240,10 +1476,14 @@ function generateYellow() {
     ['y-score-for', 'score (player\u2019s team)'],
     ['y-score-against', 'score (opposition)'],
   ]);
-  if (val('y-law') === 'Other' && !val('y-law-other')) {
-    document.getElementById('y-law-other').classList.add('invalid');
-    missing.push('law details for "Other"');
+  const checkedLaws = Array.from(document.querySelectorAll('.y-law-check:checked')).map(cb => cb.value);
+  if (checkedLaws.length === 0) { missing.push('at least one law infringed'); }
+  let lawDisplay = checkedLaws.filter(c => c !== 'Other').join(', ');
+  if (checkedLaws.includes('Other')) {
+    if (!val('y-law-other')) { document.getElementById('y-law-other').classList.add('invalid'); missing.push('law details for "Other"'); }
+    lawDisplay = [lawDisplay, 'Other — ' + val('y-law-other')].filter(Boolean).join('; ');
   }
+  if (!lawDisplay) lawDisplay = '(none selected)';
   if (val('y-timing') === 'After 48hrs' && !val('y-timing-reason')) {
     document.getElementById('y-timing-reason').classList.add('invalid');
     missing.push('reason for late submission');
@@ -1251,7 +1491,6 @@ function generateYellow() {
   if (missing.length) { alert('Please fill in: ' + missing.join(', ') + '.'); return; }
 
   const playerName = val('y-name');
-  const law = val('y-law') === 'Other' ? ('Other — ' + val('y-law-other')) : val('y-law');
   const narrative = [
     `${val('y-elapsed')} - ${val('y-n-action')}`.trim(),
     val('y-n-ball'),
@@ -1264,7 +1503,7 @@ function generateYellow() {
     playerNumber: val('y-number'),
     playerTeam: val('y-team'),
     playerUnion: val('y-player-union'),
-    law,
+    law: lawDisplay,
     period: val('y-period'),
     elapsed: val('y-elapsed'),
     scoreFor: val('y-score-for'),
@@ -1286,39 +1525,40 @@ function generateYellow() {
 
   const output =
 `RUGBY CANADA
-PLAYER CAUTION REPORT (Yellow Card Report)
+YELLOW CARD REPORT — Player caution report
 
-Fixture: ${match.date || ''} ${match.teamA} v ${match.teamB} at time ${match.time || ''}
+Teams: ${match.teamA} v ${match.teamB}
 Competition: ${match.competition || ''}
-Official: ${settings.official || ''} (Referee)
-Referee Phone Number: ${settings.phone || ''}
-Referee Provincial Union: ${settings.union || ''}
-Submission Timing: ${fields.timing}
-${fields.timing === 'After 48hrs' ? 'Reason for submission after 48hrs: ' + fields.timingReason + '\n' : ''}Players Team: ${fields.playerTeam}
-Player Being Reported: ${fields.playerName}
-Player Jersey Number: ${fields.playerNumber}
-Player Provincial Union: ${fields.playerUnion}
+Date / time: ${match.date || ''}  ${match.time || ''}
+Official: ${settings.official || ''}   Provincial union: ${settings.union || ''}   Phone: ${settings.phone || ''}
+
+Player: ${fields.playerName}
+Team: ${fields.playerTeam}   Jersey #: ${fields.playerNumber}
+Provincial union: ${fields.playerUnion}
+
+Period: ${fields.period}   Elapsed time: ${fields.elapsed}
+Score at incident (${fields.playerTeam || 'player\u2019s team'} first): ${fields.scoreFor} - ${fields.scoreAgainst}
+Proximity (m): ${fields.proximity}
+
 Law: ${fields.law}
-Period: ${fields.period}
-Elapsed time in period: ${fields.elapsed}
-Score at the time of the incident (Player's team first): ${fields.scoreFor} - ${fields.scoreAgainst}
-Proximity (mtrs): ${fields.proximity}
-Had any warnings been issued to the Player?: ${fields.warnPlayer}
-Had any warnings been issued to the Player's Team?: ${fields.warnTeam}
-Was there head or neck/throat contact?: ${fields.headContact}
-What was the degree of Danger?: ${fields.danger}
-What was the reason for mitigation?: ${fields.mitigationReason}
-Was mitigation applied to the sanction?: ${fields.mitigationApplied}
+
+Warning issued — player: ${fields.warnPlayer}   team: ${fields.warnTeam}
+Head or neck/throat contact: ${fields.headContact}
+Degree of danger: ${fields.danger}
+Mitigation reason: ${fields.mitigationReason || '—'}
+Mitigation applied to sanction: ${fields.mitigationApplied}
 
 Incident description:
-${fields.location ? fields.location + ' - ' : ''}${narrative}
+${fields.location ? fields.location + ' — ' : ''}${narrative}
 
-Is a video available showing the incident?: ${fields.video}
+Submission timing: ${fields.timing}
+${fields.timing === 'After 48hrs' ? 'Reason for submission after 48hrs: ' + fields.timingReason + '\n' : ''}Video available: ${fields.video}
 ${fields.video === 'Yes' ? 'Video link / access details: ' + fields.videoLink : ''}`;
 
   const player = { name: fields.playerName, number: fields.playerNumber, team: fields.playerTeam, union: fields.playerUnion };
   const wasEditing = !!editingCardId;
-  commitCard(match, 'yellow', player, fields, law.split(' ')[0], output);
+  const lawShort = (checkedLaws.filter(c => c !== 'Other')[0]) || (checkedLaws.includes('Other') ? 'Other' : '');
+  commitCard(match, 'yellow', player, fields, lawShort, output);
   if (!wasEditing) DB.saveMatchContext(match.id, { period: fields.period, scoreFor: fields.scoreFor, scoreAgainst: fields.scoreAgainst, team: fields.playerTeam });
 }
 
@@ -1414,7 +1654,17 @@ function prepRedForm(role, existing) {
       if (ctx.scoreAgainst) document.getElementById('r-score-against').value = ctx.scoreAgainst;
       if (ctx.team) document.getElementById('r-team').value = ctx.team;
     }
+    const draft = loadDraft('red');
+    if (draft && draft.matchId === match.id && draft.role === role) {
+      if (confirm('You have an unsaved red card draft for this match and role. Resume it?')) {
+        applyDraft('red', draft);
+      } else {
+        clearDraft('red');
+      }
+    }
   }
+  populateRosterDatalist('r', document.getElementById('r-team').value);
+  updatePlayerHistory('r');
   document.getElementById('r-prior-caution-wrap').classList.toggle('show', document.getElementById('r-prior-caution').value === 'Yes');
   document.getElementById('r-other-carded-wrap').classList.toggle('show', document.getElementById('r-other-carded').value === 'Yes');
   document.getElementById('r-law-other-wrap').classList.toggle('show', document.getElementById('r-law-other-check').checked);
@@ -1590,7 +1840,17 @@ function prepBlueForm(existing) {
       if (ctx.scoreAgainst) document.getElementById('b-score-against').value = ctx.scoreAgainst;
       if (ctx.team) document.getElementById('b-team').value = ctx.team;
     }
+    const draft = loadDraft('blue');
+    if (draft && draft.matchId === match.id) {
+      if (confirm('You have an unsaved blue card draft for this match. Resume it?')) {
+        applyDraft('blue', draft);
+      } else {
+        clearDraft('blue');
+      }
+    }
   }
+  populateRosterDatalist('b', document.getElementById('b-team').value);
+  updatePlayerHistory('b');
   document.getElementById('b-initiator-other-wrap').classList.toggle('show', document.getElementById('b-initiator').value === 'Other');
   document.getElementById('b-symptom-other-wrap').classList.toggle('show', document.getElementById('b-symptom-other-check').checked);
   document.getElementById('b-returned-warn').classList.toggle('show', document.getElementById('b-returned').value === 'Yes');
@@ -2084,6 +2344,128 @@ async function buildBluePdf(fields, match, settings) {
 
   page.drawText(`Generated ${new Date().toLocaleString()}`, { x: margin, y: 28, size: 7.5, font, color: gray });
   return doc.save();
+}
+
+async function buildSeasonSummaryPdf() {
+  const { PDFDocument, StandardFonts, rgb } = PDFLib;
+  const doc = await PDFDocument.create();
+  let page = doc.addPage([612, 792]);
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const bold = await doc.embedFont(StandardFonts.HelveticaBold);
+  const { width, height } = page.getSize();
+  const margin = 40;
+  const gray = rgb(0.45, 0.45, 0.45);
+  const ink = rgb(0.1, 0.1, 0.1);
+  const line = rgb(0.85, 0.85, 0.85);
+  const accent = rgb(0.059, 0.463, 0.431); // matches --accent #0f766e
+
+  const cols = [
+    { label: 'Date', w: 60 },
+    { label: 'Match', w: 148 },
+    { label: 'Player', w: 100 },
+    { label: 'Team', w: 88 },
+    { label: 'Type', w: 55 },
+    { label: 'Detail', w: 0 },
+  ];
+  const fixedW = cols.slice(0, 5).reduce((s, c) => s + c.w, 0);
+  cols[5].w = (width - margin * 2) - fixedW;
+
+  let y = height;
+  function drawPageHeader(isFirst) {
+    page.drawRectangle({ x: 0, y: height - 70, width, height: 70, color: accent });
+    if (isFirst) {
+      page.drawText('SEASON CARD SUMMARY', { x: margin, y: height - 38, size: 17, font: bold, color: rgb(1, 1, 1) });
+      const settings = DB.settings();
+      const sub = [settings.official, settings.union, `Generated ${new Date().toLocaleDateString()}`].filter(Boolean).join('  ·  ');
+      page.drawText(sub, { x: margin, y: height - 56, size: 9.5, font, color: rgb(1, 1, 1) });
+    } else {
+      page.drawText('SEASON CARD SUMMARY (cont.)', { x: margin, y: height - 44, size: 12, font: bold, color: rgb(1, 1, 1) });
+    }
+    y = height - 70 - 24;
+  }
+  drawPageHeader(true);
+
+  function truncate(text, size, maxWidth, useFont) {
+    text = String(text || '');
+    if (useFont.widthOfTextAtSize(text, size) <= maxWidth) return text;
+    while (text.length && useFont.widthOfTextAtSize(text + '…', size) > maxWidth) text = text.slice(0, -1);
+    return text + '…';
+  }
+  function drawColumnHeader() {
+    let x = margin;
+    cols.forEach(c => { page.drawText(c.label.toUpperCase(), { x, y, size: 7.5, font: bold, color: gray }); x += c.w; });
+    y -= 8;
+    page.drawLine({ start: { x: margin, y }, end: { x: width - margin, y }, thickness: 0.75, color: line });
+    y -= 14;
+  }
+  function newPageIfNeeded() {
+    if (y < 60) {
+      page = doc.addPage([612, 792]);
+      drawPageHeader(false);
+      drawColumnHeader();
+    }
+  }
+  drawColumnHeader();
+
+  const matches = DB.matches();
+  const matchById = {};
+  matches.forEach(m => { matchById[m.id] = m; });
+  const cards = DB.cards().slice().sort((a, b) => {
+    const ma = matchById[a.matchId], mb = matchById[b.matchId];
+    return ((ma && ma.date) || '').localeCompare((mb && mb.date) || '') || (a.createdAt || '').localeCompare(b.createdAt || '');
+  });
+
+  if (!cards.length) {
+    page.drawText('No cards logged yet.', { x: margin, y, size: 10, font, color: gray });
+  }
+
+  cards.forEach(c => {
+    newPageIfNeeded();
+    const m = matchById[c.matchId];
+    let x = margin;
+    const rowVals = [
+      (m && m.date) || '',
+      m ? `${m.teamA} v ${m.teamB}` : '(deleted match)',
+      c.player.name || '',
+      c.player.team || '',
+      c.type[0].toUpperCase() + c.type.slice(1) + (c.type === 'red' ? (c.role === 'ar' ? ' (AR)' : ' (Ref)') : ''),
+      c.type === 'blue' ? (c.fields.symptoms || '') : (c.fields.law || ''),
+    ];
+    rowVals.forEach((val, i) => {
+      const w = cols[i].w;
+      page.drawText(truncate(val, 8.5, w - 6, font), { x, y, size: 8.5, font, color: ink });
+      x += w;
+    });
+    y -= 16;
+  });
+
+  y = Math.min(y, 40);
+  page.drawText(`${cards.length} card${cards.length === 1 ? '' : 's'} total across ${matches.length} match${matches.length === 1 ? '' : 'es'}`, { x: margin, y: 24, size: 8, font, color: gray });
+
+  return doc.save();
+}
+
+async function exportSeasonSummary() {
+  const btn = document.getElementById('season-summary-btn');
+  const original = btn.innerHTML;
+  btn.textContent = 'Building…';
+  try {
+    const bytes = await buildSeasonSummaryPdf();
+    const blob = new Blob([bytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `season-card-summary-${todayStr()}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error(err);
+    alert('Could not build the season summary — see console for details.');
+  } finally {
+    btn.innerHTML = original;
+  }
 }
 
 async function buildPdfForCurrentCard() {
