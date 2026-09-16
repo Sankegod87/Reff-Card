@@ -196,6 +196,37 @@
     body, .app { background: #fff; padding: 0; margin: 0; }
     pre.output { border: none; padding: 0; background: #fff; }
   }
+  body.dark-mode {
+    --ink: #e8e9ea; --muted: #9aa0a6; --faint: #6b7076; --line: #33383d;
+    --paper: #121416; --card: #1b1e21;
+    --amber-bg: #3a2c0f; --amber-line: #5c4718;
+    --red-bg: #3a1414; --red-line: #5c1f1f;
+    --blue-bg: #12203a; --blue-line: #1f3560;
+    --accent-bg: #0f2b27;
+  }
+  body.dark-mode .topbar { background: rgba(18,20,22,0.88); }
+  body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background: #1b1e21; color: var(--ink); }
+  body.dark-mode input::placeholder, body.dark-mode textarea::placeholder { color: var(--faint); }
+  body.dark-mode .btn { background: #1b1e21; color: var(--ink); }
+  body.dark-mode .btn-primary { background: var(--accent); color: #fff; }
+  body.dark-mode .btn-danger { background: var(--red-bg); }
+  body.dark-mode pre.output { background: #16181a; color: #d8dade; }
+  body.dark-mode select {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239aa0a6' stroke-width='2.5'><polyline points='6 9 12 15 18 9'/></svg>");
+  }
+  body.dark-mode .checklist { background: #1b1e21; }
+  .onboard-wrap { max-width: 420px; margin: 32px auto 0; text-align: center; padding: 0 8px; }
+  .onboard-wrap .skip-row { display: flex; justify-content: flex-end; }
+  .onboard-wrap .skip-row .backlink { margin: 0; }
+  .onboard-icon {
+    width: 64px; height: 64px; border-radius: 18px; background: var(--accent-bg); color: var(--accent);
+    display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 24px auto 22px;
+  }
+  .onboard-slide h1 { font-size: 21px; margin-bottom: 10px; }
+  .onboard-slide .sub { font-size: 14px; margin-bottom: 0; }
+  .onboard-dots { display: flex; justify-content: center; gap: 6px; margin: 30px 0 18px; }
+  .onboard-dots .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line); transition: width 0.2s, border-radius 0.2s; }
+  .onboard-dots .dot.active { background: var(--accent); width: 20px; border-radius: 4px; }
 </style>
 </head>
 <body>
@@ -211,6 +242,33 @@
 
 <div class="app">
 
+<div id="screen-onboarding" class="screen">
+  <div class="onboard-wrap">
+    <div class="skip-row"><a class="backlink" onclick="finishOnboarding()">Skip</a></div>
+    <div id="onboard-slide-0" class="onboard-slide">
+      <div class="onboard-icon"><i class="ti ti-calendar-event"></i></div>
+      <h1>Set up a match</h1>
+      <p class="sub">Enter fixture details once — teams, competition, date. Today's match becomes current automatically; future fixtures wait until matchday to take over.</p>
+    </div>
+    <div id="onboard-slide-1" class="onboard-slide" style="display:none;">
+      <div class="onboard-icon"><i class="ti ti-flag-filled"></i></div>
+      <h1>Log a card</h1>
+      <p class="sub">Yellow, red, or blue — pick the type, fill in what you saw, and get a submission-ready report in the exact format your union expects.</p>
+    </div>
+    <div id="onboard-slide-2" class="onboard-slide" style="display:none;">
+      <div class="onboard-icon"><i class="ti ti-history"></i></div>
+      <h1>Your season log never disappears</h1>
+      <p class="sub">Every match and card stays saved on this device. Search, review, export backups or a season summary anytime from the home screen.</p>
+    </div>
+    <div class="onboard-dots">
+      <span class="dot active" id="onboard-dot-0"></span>
+      <span class="dot" id="onboard-dot-1"></span>
+      <span class="dot" id="onboard-dot-2"></span>
+    </div>
+    <button class="btn btn-primary btn-block" id="onboard-next-btn" onclick="onboardNext()">Next</button>
+  </div>
+</div>
+
 <div id="screen-home" class="screen active">
   <h1>Card Reports</h1>
   <p class="sub">Post-match yellow, red and blue card logging.</p>
@@ -225,7 +283,10 @@
     </div>
     <label>Outdoor / high-contrast mode</label>
     <select id="set-contrast"><option value="off">Off</option><option value="on">On — bigger text, higher contrast</option></select>
+    <label>Theme</label>
+    <select id="set-theme"><option value="light">Light</option><option value="dark">Dark</option><option value="auto">Match device</option></select>
     <button class="btn btn-block" onclick="saveSettings()"><i class="ti ti-device-floppy"></i>Save settings</button>
+    <button class="btn btn-block btn-ghost" onclick="startOnboarding()"><i class="ti ti-help-circle"></i>Replay walkthrough</button>
   </div>
 
   <div class="card">
@@ -284,7 +345,7 @@
     <h2>Card type</h2>
     <button class="type-btn yellow" onclick="chooseType('yellow')">
       <span class="icon-chip"><i class="ti ti-flag-filled"></i></span>
-      <span class="type-copy">Yellow — caution<span class="sub3">Sin bin — duration set by league</span></span>
+      <span class="type-copy">Yellow — caution<span class="sub3">Player caution report</span></span>
     </button>
     <button class="type-btn red" onclick="chooseType('red')">
       <span class="icon-chip"><i class="ti ti-square-rounded-x-filled"></i></span>
@@ -882,13 +943,28 @@ function showScreen(name) {
 function applyContrastMode() {
   document.body.classList.toggle('high-contrast', DB.settings().highContrast === 'on');
 }
+function applyTheme() {
+  const pref = DB.settings().theme || 'light';
+  let dark;
+  if (pref === 'dark') dark = true;
+  else if (pref === 'auto') dark = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  else dark = false;
+  document.body.classList.toggle('dark-mode', dark);
+}
+if (window.matchMedia) {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if ((DB.settings().theme || 'light') === 'auto') applyTheme();
+  });
+}
 function loadSettings() {
   const s = DB.settings();
   document.getElementById('set-official').value = s.official || '';
   document.getElementById('set-phone').value = s.phone || '';
   document.getElementById('set-union').value = s.union || '';
   document.getElementById('set-contrast').value = s.highContrast === 'on' ? 'on' : 'off';
+  document.getElementById('set-theme').value = s.theme || 'light';
   applyContrastMode();
+  applyTheme();
 }
 function saveSettings() {
   DB.saveSettings({
@@ -896,8 +972,39 @@ function saveSettings() {
     phone: document.getElementById('set-phone').value,
     union: document.getElementById('set-union').value,
     highContrast: document.getElementById('set-contrast').value,
+    theme: document.getElementById('set-theme').value,
   });
   applyContrastMode();
+  applyTheme();
+}
+
+// ---------- Onboarding ----------
+let onboardStep = 0;
+function resetOnboardingSlides() {
+  onboardStep = 0;
+  for (let i = 0; i < 3; i++) {
+    document.getElementById('onboard-slide-' + i).style.display = i === 0 ? 'block' : 'none';
+    document.getElementById('onboard-dot-' + i).classList.toggle('active', i === 0);
+  }
+  document.getElementById('onboard-next-btn').textContent = 'Next';
+}
+function onboardNext() {
+  onboardStep++;
+  if (onboardStep > 2) { finishOnboarding(); return; }
+  for (let i = 0; i < 3; i++) {
+    document.getElementById('onboard-slide-' + i).style.display = i === onboardStep ? 'block' : 'none';
+    document.getElementById('onboard-dot-' + i).classList.toggle('active', i === onboardStep);
+  }
+  document.getElementById('onboard-next-btn').textContent = onboardStep === 2 ? 'Get started' : 'Next';
+}
+function finishOnboarding() {
+  localStorage.setItem('moa_onboarded', '1');
+  resetOnboardingSlides();
+  showScreen('home');
+}
+function startOnboarding() {
+  resetOnboardingSlides();
+  showScreen('onboarding');
 }
 
 // ---------- Match ----------
@@ -2560,6 +2667,9 @@ if ('serviceWorker' in navigator) {
 
 // ---------- Init ----------
 renderHome();
+if (!localStorage.getItem('moa_onboarded')) {
+  showScreen('onboarding');
+}
 </script>
 
 </body>
